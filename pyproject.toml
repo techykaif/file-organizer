@@ -7,7 +7,7 @@ name = "kaif-file-organizer"
 version = "0.1.1"
 description = "A safe, general-purpose local file organizer and file-management CLI."
 readme = "README.md"
-requires-python = ">=3.8"
+requires-python = ">=3.12"
 license = "MIT"
 
 authors = [
@@ -30,11 +30,9 @@ classifiers = [
     "Operating System :: OS Independent",
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3 :: Only",
-    "Programming Language :: Python :: 3.8",
-    "Programming Language :: Python :: 3.9",
-    "Programming Language :: Python :: 3.10",
-    "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
     "Topic :: Desktop Environment :: File Managers",
     "Topic :: Utilities"
 ]

@@ -11,6 +11,10 @@ A safe, general-purpose local file organizer and file-management CLI that catego
 - **Recursive Mode**: Explicitly opt-in to process subdirectories.
 - **Hidden/System Files**: Safely ignores hidden files (starting with `.`) and symlinks by default.
 
+## Prerequisites
+
+- Python 3.12 or higher
+
 ## Installation
 
 You can install this tool using `pipx` (recommended) or `pip`:
