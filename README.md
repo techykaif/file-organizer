@@ -159,6 +159,10 @@ This project uses standard GitHub Actions for CI and CD.
 - **Tests**: Automatically run on every push and pull request to `main`.
 - **Releases**: Managed via GitHub Releases. Publishing a new release triggers the PyPI Trusted Publishing workflow (`release.yml`), which builds and uploads the package to PyPI securely via OIDC.
 
+## Contributing
+
+Contributions are welcome! Please see [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to set up your environment, run tests, and submit pull requests.
+
 ## Links
 
 - **GitHub Repository**: [https://github.com/techykaif/file-organizer](https://github.com/techykaif/file-organizer)
