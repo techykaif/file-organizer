@@ -7,7 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-### Documentation
+### Added
+- Add detailed structured CLI operation summaries (moved, duplicates skipped, collisions handled).
+- Add integration test suite (`tests/test_cli.py`) and unit tests for core file organizer operations.
+- Add CodeQL automated security scanning and Dependabot configurations.
+- Add full suite of community governance documentation (`CONTRIBUTING.md`, `CODE_OF_CONDUCT.md`, `.github/SECURITY.md`, and issue/PR templates).
+
+### Changed
+- Enhance CI validation to automatically build and test `.whl` distributions in isolated environments.
+- Harden GitHub Actions workflows (`tests.yml`) with explicitly scoped least-privilege permissions.
+- Improve CLI standard output UX and `dry-run` simulation semantics.
 - Improve project README and update repository installation URLs.
 
 ## [0.1.2]
