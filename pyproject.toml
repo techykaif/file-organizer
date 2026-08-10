@@ -1,0 +1,30 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "file-organizer"
+version = "0.1.0"
+description = "A safe, general-purpose local file organizer and file-management CLI."
+readme = "README.md"
+requires-python = ">=3.8"
+license = { text = "MIT" }
+authors = [
+    { name = "Mohd Kaif Ansari" },
+]
+dependencies = []
+
+[project.urls]
+"Homepage" = "https://github.com/techykaif/file_handling"
+
+[project.scripts]
+file-organizer = "file_organizer.cli:main"
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.0",
+    "ruff>=0.1.0",
+]
+
+[tool.setuptools.packages.find]
+where = ["src"]

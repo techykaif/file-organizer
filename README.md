@@ -1,80 +1,97 @@
+# File Organizer
 
-# File Organizer Script
-
-A Python-based automation script that organizes files in a directory into categorized subfolders based on their file types. This script is designed to save time and keep your workspace clean and organized.
+A safe, general-purpose local file organizer and file-management CLI that categorizes your files securely and predictably.
 
 ## Features
-- **File Categorization**: Automatically sorts files into predefined categories such as Documents, Images, Videos, Code, etc.
-- **Duplicate Detection**: Identifies duplicate files using MD5 hash and prevents redundancy.
-- **Error Handling**: Logs errors in an `errors.txt` file for troubleshooting.
-- **Action Logging**: Records all file movements in a `logs.txt` file.
-- **Empty Folder Cleanup**: Moves empty folders to a `Clean_Up` directory for better organization.
 
-## File Categories
-The script organizes files into the following categories:
-- Documents (`.pdf`, `.docx`, `.txt`)
-- Images (`.jpg`, `.jpeg`, `.png`, `.gif`)
-- Videos (`.mp4`, `.mkv`, `.avi`)
-- Audio (`.mp3`, `.wav`)
-- Archives (`.zip`, `.rar`, `.7z`)
-- Executables (`.exe`, `.msi`)
-- Python Scripts (`.py`)
-- Applications (`.app`)
-- Web Pages (`.html`, `.xml`)
-- Spreadsheets (`.xls`, `.xlsx`)
-- Presentations (`.ppt`, `.pptx`)
-- Code (`.cpp`, `.java`, `.c`)
-- Others (uncategorized files)
+- **Safe by Default**: Never deletes files automatically. Never silently overwrites files.
+- **Dry-run Mode**: See what would happen before actually moving anything.
+- **Duplicate Handling**: Safely handles file collisions (`file (1).ext`) and skips exact identical duplicates using MD5 hashing.
+- **Configurable**: Use sensible defaults or provide your own JSON configuration for custom categories.
+- **Recursive Mode**: Explicitly opt-in to process subdirectories.
+- **Hidden/System Files**: Safely ignores hidden files (starting with `.`) and symlinks by default.
 
-## How It Works
-1. The script scans the specified directory.
-2. Files are moved to corresponding subfolders based on their extensions.
-3. Duplicate files are detected using MD5 hash, and their names are modified to avoid overwriting.
-4. Logs of successful actions and errors are saved in `logs.txt` and `errors.txt`, respectively.
-5. Empty folders are moved to a `Clean_Up` directory.
+## Installation
 
-## Prerequisites
-- Python 3.6 or higher
-- Required libraries: `os`, `shutil`, `datetime`, `hashlib`
+You can install this tool using `pipx` (recommended) or `pip`:
 
-## Setup and Usage
-1. Clone the repository or download the script
 ```bash
-git clone https://github.com/techykaif/file_handling
+# Recommended: Install isolated via pipx
+pipx install git+https://github.com/techykaif/file_handling.git
+
+# Alternatively, install via pip
+pip install git+https://github.com/techykaif/file_handling.git
+```
+
+## Usage
+
+Organize a directory:
+```bash
+file-organizer ~/Downloads
+```
+
+Preview changes without moving files:
+```bash
+file-organizer ~/Downloads --dry-run
+```
+
+Organize a directory and its subdirectories:
+```bash
+file-organizer ~/Downloads --recursive
+```
+
+Use a custom configuration:
+```bash
+file-organizer ~/Downloads --config my_categories.json
+```
+
+Skip confirmation prompts (for automation):
+```bash
+file-organizer ~/Downloads --yes
+```
+
+## Configuration
+
+By default, files are organized into standard categories (Documents, Images, Videos, Audio, Archives, Code, etc.).
+You can override these by creating a custom JSON configuration file:
+
+```json
+{
+  "Photos": [".jpg", ".png", ".heic"],
+  "Work": [".pdf", ".docx", ".xlsx"],
+  "Music": [".mp3", ".wav"]
+}
+```
+And passing it via `--config`:
+```bash
+file-organizer ~/Downloads --config config.json
+```
+
+## Safety
+
+File manipulation is potentially destructive, which is why `file-organizer` implements strong safety defaults:
+- **Dry-run (`--dry-run`)**: Shows planned changes.
+- **No silent overwrites**: Filename collisions in the destination are handled gracefully (`file (1).txt`).
+- **No automatic deletion**: The tool will not delete any files or directories.
+- **No hidden/system file moves**: Hidden files and symbolic links are ignored by default.
+
+## Development
+
+Clone the repository and install it in development mode:
+```bash
+git clone https://github.com/techykaif/file_handling.git
 cd file_handling
-```
-2. Set the `directory` variable in the script to the path of the directory you want to organize.
-3. Run the script:
-   ```bash
-   python file_organizer.py
-   ```
-4. Check the `logs.txt` and `errors.txt` files for details about the operation.
-
-## Example Output
-After running the script, your directory structure might look like this:
-
-```
-/Documents
-   - example.pdf
-/Images
-   - photo.jpg
-/Videos
-   - video.mp4
-/Others
-   - uncategorized_file.xyz
-/logs.txt
-/errors.txt
+python -m venv .venv
+source .venv/bin/activate
+pip install -e ".[dev]"
 ```
 
-## Contributing
-Contributions are welcome! Feel free to open an issue or submit a pull request with suggestions or improvements.
+Run tests and linting:
+```bash
+pytest
+ruff check .
+```
 
 ## License
-This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
 
-## Contact
-For any queries or feedback, feel free to reach out:
-- **Name**: Mohd Kaif Ansari
-- **LinkedIn**: [Connect with me on LinkedIn](https://www.linkedin.com/in/mohd-kaif-ansari-0754522bb/)
-
-Feel free to customize the contact section and add any other details you find relevant! 😊
+This project is licensed under the MIT License - see the LICENSE file for details.
