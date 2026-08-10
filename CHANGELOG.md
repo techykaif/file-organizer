@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.3] - 2026-08-10
+
 ### Added
 - Add detailed structured CLI operation summaries (moved, duplicates skipped, collisions handled).
 - Add integration test suite (`tests/test_cli.py`) and unit tests for core file organizer operations.
