@@ -1,3 +1,4 @@
+import importlib.metadata
 import subprocess
 import sys
 
@@ -20,7 +21,13 @@ def test_cli_version():
         check=False
     )
     assert result.returncode == 0
-    assert "file-organizer" in result.stdout
+
+    try:
+        expected_version = importlib.metadata.version("kaif-file-organizer")
+    except importlib.metadata.PackageNotFoundError:
+        expected_version = "unknown"
+
+    assert result.stdout.strip() == f"file-organizer {expected_version}"
 
 def test_cli_invalid_path():
     result = subprocess.run(

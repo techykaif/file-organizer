@@ -1,3 +1,8 @@
 """File organizer package."""
 
-__version__ = "0.1.0"
+import importlib.metadata
+
+try:
+    __version__ = importlib.metadata.version("kaif-file-organizer")
+except importlib.metadata.PackageNotFoundError:
+    __version__ = "unknown"
