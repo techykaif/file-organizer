@@ -48,7 +48,7 @@ def test_cli_dry_run(tmp_path):
         check=False
     )
     assert result.returncode == 0
-    assert "Would move 1 files" in result.stdout
+    assert "Files to move:        1" in result.stdout
     assert (tmp_path / "test.txt").exists()
     assert not (tmp_path / "Documents").exists()
 
@@ -61,7 +61,7 @@ def test_cli_normal_run(tmp_path):
         check=False
     )
     assert result.returncode == 0
-    assert "Moved 1 files" in result.stdout
+    assert "Files moved:          1" in result.stdout
     assert not (tmp_path / "test.txt").exists()
     assert (tmp_path / "Documents" / "test.txt").exists()
 
@@ -76,7 +76,7 @@ def test_cli_recursive(tmp_path):
         check=False
     )
     assert result.returncode == 0
-    assert "Moved 1 files" in result.stdout
+    assert "Files moved:          1" in result.stdout
     assert (tmp_path / "Images" / "test.jpg").exists()
     assert not (sub / "test.jpg").exists()
 
@@ -92,7 +92,7 @@ def test_cli_custom_config(tmp_path):
         check=False
     )
     assert result.returncode == 0
-    assert "Moved 2 files" in result.stdout
+    assert "Files moved:          2" in result.stdout
     assert (tmp_path / "Data" / "data.csv").exists()
 
 def test_cli_invalid_config(tmp_path):

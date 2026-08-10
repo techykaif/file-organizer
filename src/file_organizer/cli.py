@@ -55,14 +55,30 @@ def main():
         recursive=args.recursive
     )
 
-    moved, errors = organizer.run()
+    summary = organizer.run()
 
     if args.dry_run:
-        print(f"\nDry run complete. Would move {moved} files. Errors encountered: {errors}.")
+        print("\n--- Dry Run Summary ---")
+        print(f"Files found:          {summary.found}")
+        print(f"Files to move:        {summary.moved}")
+        if summary.duplicates_skipped > 0:
+            print(f"Duplicates to skip:   {summary.duplicates_skipped}")
+        if summary.collisions_handled > 0:
+            print(f"Collisions to handle: {summary.collisions_handled}")
+        if summary.errors > 0:
+            print(f"Errors encountered:   {summary.errors}")
     else:
-        print(f"\nOrganization complete. Moved {moved} files. Errors encountered: {errors}.")
+        print("\n--- Organization Summary ---")
+        print(f"Files found:          {summary.found}")
+        print(f"Files moved:          {summary.moved}")
+        if summary.duplicates_skipped > 0:
+            print(f"Duplicates skipped:   {summary.duplicates_skipped}")
+        if summary.collisions_handled > 0:
+            print(f"Collisions handled:   {summary.collisions_handled}")
+        if summary.errors > 0:
+            print(f"Errors encountered:   {summary.errors}")
 
-    if errors > 0:
+    if summary.errors > 0:
         sys.exit(1)
     sys.exit(0)
 

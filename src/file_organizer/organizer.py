@@ -3,9 +3,20 @@ from __future__ import annotations
 import hashlib
 import os
 import shutil
+import sys
+from dataclasses import dataclass
 from pathlib import Path
 
 from file_organizer.config import DEFAULT_CATEGORIES, get_category_for_extension
+
+
+@dataclass
+class OrganizerSummary:
+    found: int = 0
+    moved: int = 0
+    duplicates_skipped: int = 0
+    collisions_handled: int = 0
+    errors: int = 0
 
 
 class FileOrganizer:
@@ -28,19 +39,21 @@ class FileOrganizer:
             print(f"Warning: Could not read {file_path} for hashing: {e}")
             return None
 
-    def _get_safe_destination(self, source_path: Path, dest_dir: Path) -> Path:
-        """Find a safe filename using file (1).ext format if a collision occurs."""
+    def _get_safe_destination(self, source_path: Path, dest_dir: Path) -> tuple[Path, bool]:
+        """Find a safe filename using file (1).ext format if a collision occurs. Returns (dest_path, collision_occurred)."""
         base_name = source_path.stem
         ext = source_path.suffix
 
         dest_path = dest_dir / source_path.name
         counter = 1
+        collision = False
 
         while dest_path.exists():
+            collision = True
             dest_path = dest_dir / f"{base_name} ({counter}){ext}"
             counter += 1
 
-        return dest_path
+        return dest_path, collision
 
     def _is_safe_to_process(self, path: Path) -> bool:
         """Check if a file should be skipped (hidden or system file)."""
@@ -50,18 +63,19 @@ class FileOrganizer:
         # Do not process symbolic links unless required (safest default is to ignore)
         return not path.is_symlink()
 
-    def run(self) -> tuple[int, int]:
-        """Run the file organization. Returns (files_moved, errors)."""
+    def run(self) -> OrganizerSummary:
+        """Run the file organization. Returns an OrganizerSummary."""
+        summary = OrganizerSummary()
+
         if not self.target_dir.exists():
-            print(f"Error: Target directory '{self.target_dir}' does not exist.")
-            return 0, 1
+            print(f"Error: Target directory '{self.target_dir}' does not exist.", file=sys.stderr)
+            summary.errors += 1
+            return summary
 
         if not self.target_dir.is_dir():
-            print(f"Error: Target '{self.target_dir}' is not a directory.")
-            return 0, 1
-
-        files_moved = 0
-        errors = 0
+            print(f"Error: Target '{self.target_dir}' is not a directory.", file=sys.stderr)
+            summary.errors += 1
+            return summary
 
         # We will collect files to move to avoid modifying the directory while iterating
         files_to_process: list[Path] = []
@@ -85,10 +99,12 @@ class FileOrganizer:
                     if item.is_file() and self._is_safe_to_process(item):
                         files_to_process.append(item)
         except PermissionError as e:
-            print(f"Error: Permission denied accessing directory contents: {e}")
-            return 0, 1
+            print(f"Error: Permission denied accessing directory contents: {e}", file=sys.stderr)
+            summary.errors += 1
+            return summary
 
-        print(f"Found {len(files_to_process)} files to process.")
+        summary.found = len(files_to_process)
+        print(f"Found {summary.found} files to process.")
 
         for file_path in files_to_process:
             try:
@@ -97,27 +113,30 @@ class FileOrganizer:
                 if file_hash:
                     if file_hash in self.processed_hashes:
                         print(f"Skipping duplicate file: {file_path.name}")
+                        summary.duplicates_skipped += 1
                         continue
                     self.processed_hashes.add(file_hash)
 
                 category = get_category_for_extension(file_path.suffix, self.categories)
                 dest_dir = self.target_dir / category
 
-                dest_path = self._get_safe_destination(file_path, dest_dir)
+                dest_path, collision = self._get_safe_destination(file_path, dest_dir)
+                if collision:
+                    summary.collisions_handled += 1
 
                 if self.dry_run:
-                    print(f"Would move: {file_path.relative_to(self.target_dir) if self.recursive else file_path.name} -> {category}/{dest_path.name}")
+                    print(f"[DRY-RUN] Would move: {file_path.relative_to(self.target_dir) if self.recursive else file_path.name} -> {category}/{dest_path.name}")
                 else:
                     dest_dir.mkdir(exist_ok=True, parents=True)
                     shutil.move(str(file_path), str(dest_path))
                     print(f"Moved: {file_path.name} -> {category}/{dest_path.name}")
 
-                files_moved += 1
+                summary.moved += 1
             except PermissionError:
-                print(f"Error: Permission denied moving {file_path.name}")
-                errors += 1
+                print(f"Error: Permission denied moving {file_path.name}", file=sys.stderr)
+                summary.errors += 1
             except OSError as e:
-                print(f"Error processing {file_path.name}: {e}")
-                errors += 1
+                print(f"Error processing {file_path.name}: {e}", file=sys.stderr)
+                summary.errors += 1
 
-        return files_moved, errors
+        return summary
