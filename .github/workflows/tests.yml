@@ -1,5 +1,8 @@
 name: Tests
 
+permissions:
+  contents: read
+
 on:
   push:
     branches: [ main ]
@@ -23,7 +26,7 @@ jobs:
 
     - name: Install dependencies
       run: |
-        python -m pip install --upgrade pip
+        python -m pip install --upgrade pip build
         pip install ".[dev]"
 
     - name: Lint with Ruff
@@ -32,4 +35,17 @@ jobs:
 
     - name: Test with pytest
       run: |
-        pytest tests/
+        pytest --cov=file_organizer tests/
+
+    - name: Build package
+      run: |
+        python -m build
+
+    - name: Validate Wheel Installation
+      run: |
+        python -m venv wheel-venv
+        WHEEL_PATH=$(ls dist/*.whl)
+        wheel-venv/bin/pip install "$WHEEL_PATH"
+        wheel-venv/bin/file-organizer --version
+        wheel-venv/bin/file-organizer --help
+        rm -rf wheel-venv
