@@ -105,3 +105,57 @@ def test_hidden_file_skipping(tmp_path):
     assert moved == 0
     assert errors == 0
     assert (tmp_path / ".hidden.txt").exists()
+
+def test_symlink_skipping(tmp_path):
+    import os
+    # Create a real file
+    real_file = tmp_path / "real.txt"
+    real_file.write_text("real content")
+    # Create a symlink to it
+    symlink_file = tmp_path / "link.txt"
+    os.symlink(real_file, symlink_file)
+
+    organizer = FileOrganizer(target_dir=tmp_path, dry_run=False)
+    moved, errors = organizer.run()
+
+    # The real file should move, the symlink should be ignored/skipped
+    # But wait, does the symlink move?
+    # _is_safe_to_process skips symlinks.
+    # The real file will be moved, and the symlink will become broken but left behind.
+    assert moved == 1
+    assert errors == 0
+    assert not real_file.exists()
+    assert symlink_file.is_symlink()
+
+def test_invalid_target_dir(tmp_path):
+    # Directory does not exist
+    not_exist = tmp_path / "does_not_exist"
+    organizer = FileOrganizer(target_dir=not_exist)
+    moved, errors = organizer.run()
+    assert moved == 0
+    assert errors == 1
+
+    # Target is a file, not a directory
+    is_file = tmp_path / "file.txt"
+    is_file.write_text("not a dir")
+    organizer2 = FileOrganizer(target_dir=is_file)
+    moved2, errors2 = organizer2.run()
+    assert moved2 == 0
+    assert errors2 == 1
+
+def test_custom_config(tmp_path):
+    (tmp_path / "code.py").write_text("print('hello')")
+    (tmp_path / "data.csv").write_text("1,2,3")
+
+    custom_categories = {
+        "PythonFiles": [".py"],
+        "DataFiles": [".csv"]
+    }
+
+    organizer = FileOrganizer(target_dir=tmp_path, categories=custom_categories, dry_run=False)
+    moved, errors = organizer.run()
+
+    assert moved == 2
+    assert errors == 0
+    assert (tmp_path / "PythonFiles" / "code.py").exists()
+    assert (tmp_path / "DataFiles" / "data.csv").exists()
