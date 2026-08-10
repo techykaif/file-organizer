@@ -21,10 +21,10 @@ You can install this tool using `pipx` (recommended) or `pip`:
 
 ```bash
 # Recommended: Install isolated via pipx
-pipx install git+https://github.com/techykaif/file_handling.git
+pipx install git+https://github.com/techykaif/file-organizer.git
 
 # Alternatively, install via pip
-pip install git+https://github.com/techykaif/file_handling.git
+pip install git+https://github.com/techykaif/file-organizer.git
 ```
 
 ## Usage
@@ -83,8 +83,8 @@ File manipulation is potentially destructive, which is why `file-organizer` impl
 
 Clone the repository and install it in development mode:
 ```bash
-git clone https://github.com/techykaif/file_handling.git
-cd file_handling
+git clone https://github.com/techykaif/file-organizer.git
+cd file-organizer
 python -m venv .venv
 source .venv/bin/activate
 pip install -e ".[dev]"
