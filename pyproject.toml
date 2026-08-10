@@ -15,7 +15,7 @@ authors = [
 dependencies = []
 
 [project.urls]
-"Homepage" = "https://github.com/techykaif/file_handling"
+"Homepage" = "https://github.com/techykaif/file-organizer"
 
 [project.scripts]
 file-organizer = "file_organizer.cli:main"
