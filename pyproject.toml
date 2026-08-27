@@ -56,3 +56,6 @@ dev = [
 
 [tool.setuptools.packages.find]
 where = ["src"]
+
+[tool.coverage.report]
+fail_under = 85
