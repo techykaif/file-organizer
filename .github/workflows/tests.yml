@@ -53,3 +53,23 @@ jobs:
         wheel-venv/bin/file-organizer --version
         wheel-venv/bin/file-organizer --help
         rm -rf wheel-venv
+
+  audit:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v7
+
+    - name: Set up Python
+      uses: actions/setup-python@v7
+      with:
+        python-version: "3.14"
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install ".[dev]"
+        pip install pip-audit
+
+    - name: Audit dependencies
+      run: |
+        pip-audit
