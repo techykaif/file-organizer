@@ -135,8 +135,6 @@ def test_cli_missing_config(tmp_path):
 
 
 def test_cli_confirmation_declined(tmp_path):
-    (tmp_path / "test.txt").write_text("hello")
-
     result = run_cli_module(str(tmp_path), "--yes=false")
 
     assert result.returncode != 0
@@ -144,12 +142,63 @@ def test_cli_confirmation_declined(tmp_path):
 
 def test_cli_main_confirmation_declined(monkeypatch, tmp_path, capsys):
     monkeypatch.setattr("builtins.input", lambda _: "n")
+    monkeypatch.setattr(sys, "argv", ["file-organizer", str(tmp_path)])
 
     with pytest.raises(SystemExit) as exc_info:
-        cli.main.__wrapped__() if hasattr(cli.main, "__wrapped__") else cli.main()
+        cli.main()
 
-    assert exc_info.value.code == 2
-    assert "Cancelled" not in capsys.readouterr().out
+    assert exc_info.value.code == 0
+    assert "Operation cancelled." in capsys.readouterr().out
+
+
+def test_cli_main_confirmation_accepted(monkeypatch, tmp_path):
+    (tmp_path / "test.txt").write_text("hello")
+    monkeypatch.setattr("builtins.input", lambda _: "yes")
+    monkeypatch.setattr(sys, "argv", ["file-organizer", str(tmp_path)])
+
+    with pytest.raises(SystemExit) as exc_info:
+        cli.main()
+
+    assert exc_info.value.code == 0
+    assert (tmp_path / "Documents" / "test.txt").exists()
+
+
+def test_cli_main_invalid_path(monkeypatch, tmp_path, capsys):
+    monkeypatch.setattr(
+        sys, "argv", ["file-organizer", str(tmp_path / "missing"), "--yes"]
+    )
+
+    with pytest.raises(SystemExit) as exc_info:
+        cli.main()
+
+    assert exc_info.value.code == 1
+    assert "does not exist" in capsys.readouterr().err
+
+
+def test_cli_main_file_path(monkeypatch, tmp_path, capsys):
+    target = tmp_path / "file.txt"
+    target.write_text("not a directory")
+    monkeypatch.setattr(sys, "argv", ["file-organizer", str(target), "--yes"])
+
+    with pytest.raises(SystemExit) as exc_info:
+        cli.main()
+
+    assert exc_info.value.code == 1
+    assert "is not a directory" in capsys.readouterr().err
+
+
+def test_cli_main_invalid_config(monkeypatch, tmp_path, capsys):
+    config_file = tmp_path / "config.json"
+    config_file.write_text("not json")
+    monkeypatch.setattr(
+        sys, "argv", ["file-organizer", str(tmp_path), "--yes", "--config", str(config_file)]
+    )
+
+    with pytest.raises(SystemExit) as exc_info:
+        cli.main()
+
+    assert exc_info.value.code == 1
+    assert "Error loading configuration" in capsys.readouterr().err
 
 
 def test_cli_main_summary_and_success(monkeypatch, tmp_path, capsys):
