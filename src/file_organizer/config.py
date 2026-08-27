@@ -18,6 +18,7 @@ DEFAULT_CATEGORIES = {
     "Code": [".cpp", ".java", ".c", ".h", ".cs", ".json", ".yaml", ".yml"],
 }
 
+
 def load_config(config_path: Path) -> dict[str, list[str]]:
     """
     Load categorization configuration from a JSON file.
@@ -30,10 +31,13 @@ def load_config(config_path: Path) -> dict[str, list[str]]:
         try:
             user_categories = json.load(f)
             if not isinstance(user_categories, dict):
-                raise TypeError("Configuration must be a JSON object mapping category names to lists of extensions.")
+                raise TypeError(
+                    "Configuration must be a JSON object mapping category names to lists of extensions."
+                )
             return user_categories
         except json.JSONDecodeError as e:
             raise ValueError(f"Invalid JSON in config file: {e}")
+
 
 def get_category_for_extension(ext: str, categories: dict[str, list[str]]) -> str:
     """Return the category name for a given extension, or 'Other' if not found."""
