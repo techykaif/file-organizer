@@ -39,7 +39,7 @@ jobs:
 
     - name: Test with pytest
       run: |
-        pytest --cov=file_organizer tests/
+        pytest --cov=file_organizer --cov-fail-under=85 tests/
 
     - name: Build package
       run: |
