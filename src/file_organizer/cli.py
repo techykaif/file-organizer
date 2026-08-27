@@ -28,9 +28,13 @@ def main():
         help="Path to a custom JSON configuration file mapping categories to extensions.",
     )
     parser.add_argument(
-        "--yes", action="store_true", help="Skip any confirmation prompts (non-interactive mode)."
+        "--yes",
+        action="store_true",
+        help="Skip any confirmation prompts (non-interactive mode).",
     )
-    parser.add_argument("--version", action="version", version=f"%(prog)s {__version__}")
+    parser.add_argument(
+        "--version", action="version", version=f"%(prog)s {__version__}"
+    )
 
     args = parser.parse_args()
 
@@ -54,9 +58,13 @@ def main():
             sys.exit(1)
 
     if not args.yes and not args.dry_run:
-        confirm = input(
-            f"Are you sure you want to organize '{target_path.resolve()}'? [y/N]: "
-        ).strip().lower()
+        confirm = (
+            input(
+                f"Are you sure you want to organize '{target_path.resolve()}'? [y/N]: "
+            )
+            .strip()
+            .lower()
+        )
         if confirm not in ["y", "yes"]:
             print("Operation cancelled.")
             sys.exit(0)
