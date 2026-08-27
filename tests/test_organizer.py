@@ -103,7 +103,10 @@ def test_recursive_dry_run_reports_relative_path(tmp_path, capsys):
     summary = FileOrganizer(target_dir=tmp_path, dry_run=True, recursive=True).run()
 
     assert summary.moved == 1
-    assert "[DRY-RUN] Would move: subfolder/test.txt -> Documents/test.txt" in capsys.readouterr().out
+    assert (
+        "[DRY-RUN] Would move: subfolder/test.txt -> Documents/test.txt"
+        in capsys.readouterr().out
+    )
 
 
 def test_hidden_file_skipping(tmp_path):
@@ -154,7 +157,10 @@ def test_hash_error_is_non_fatal(tmp_path, monkeypatch, capsys):
     source.write_text("hello")
 
     organizer = FileOrganizer(target_dir=tmp_path)
-    monkeypatch.setattr("builtins.open", lambda *args, **kwargs: (_ for _ in ()).throw(OSError("read failed")))
+    monkeypatch.setattr(
+        "builtins.open",
+        lambda *args, **kwargs: (_ for _ in ()).throw(OSError("read failed")),
+    )
 
     assert organizer._calculate_hash(source) is None
     assert "Could not read" in capsys.readouterr().out
