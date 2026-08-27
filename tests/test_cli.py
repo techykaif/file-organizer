@@ -126,7 +126,9 @@ def test_cli_config_must_be_object(tmp_path):
 
 
 def test_cli_missing_config(tmp_path):
-    result = run_cli_module(str(tmp_path), "--yes", "--config", str(tmp_path / "missing.json"))
+    result = run_cli_module(
+        str(tmp_path), "--yes", "--config", str(tmp_path / "missing.json")
+    )
 
     assert result.returncode == 1
     assert "Configuration file not found" in result.stderr
@@ -156,7 +158,9 @@ def test_cli_main_summary_and_success(monkeypatch, tmp_path, capsys):
             self.kwargs = kwargs
 
         def run(self):
-            return OrganizerSummary(found=3, moved=2, duplicates_skipped=1, collisions_handled=1)
+            return OrganizerSummary(
+                found=3, moved=2, duplicates_skipped=1, collisions_handled=1
+            )
 
     monkeypatch.setattr(cli, "FileOrganizer", FakeOrganizer)
     monkeypatch.setattr(sys, "argv", ["file-organizer", str(tmp_path), "--yes"])
@@ -178,7 +182,9 @@ def test_cli_main_dry_run_summary(monkeypatch, tmp_path, capsys):
             self.kwargs = kwargs
 
         def run(self):
-            return OrganizerSummary(found=4, moved=4, duplicates_skipped=1, collisions_handled=2)
+            return OrganizerSummary(
+                found=4, moved=4, duplicates_skipped=1, collisions_handled=2
+            )
 
     monkeypatch.setattr(cli, "FileOrganizer", FakeOrganizer)
     monkeypatch.setattr(sys, "argv", ["file-organizer", str(tmp_path), "--dry-run"])
