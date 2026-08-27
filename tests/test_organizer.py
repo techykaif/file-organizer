@@ -1,3 +1,5 @@
+from pathlib import Path
+
 from file_organizer.config import DEFAULT_CATEGORIES, get_category_for_extension
 from file_organizer.organizer import FileOrganizer
 
@@ -95,6 +97,20 @@ def test_recursive(tmp_path):
     assert not (sub / "test.txt").exists()
 
 
+def test_recursive_dry_run_reports_relative_path(tmp_path, capsys):
+    sub = tmp_path / "subfolder"
+    sub.mkdir()
+    (sub / "test.txt").write_text("hello")
+
+    summary = FileOrganizer(target_dir=tmp_path, dry_run=True, recursive=True).run()
+
+    assert summary.moved == 1
+    assert (
+        "[DRY-RUN] Would move: subfolder/test.txt -> Documents/test.txt"
+        in capsys.readouterr().out
+    )
+
+
 def test_hidden_file_skipping(tmp_path):
     (tmp_path / ".hidden.txt").write_text("hidden")
 
@@ -136,6 +152,66 @@ def test_invalid_target_dir(tmp_path):
     summary2 = organizer2.run()
     assert summary2.moved == 0
     assert summary2.errors == 1
+
+
+def test_hash_error_is_non_fatal(tmp_path, monkeypatch, capsys):
+    source = tmp_path / "test.txt"
+    source.write_text("hello")
+
+    organizer = FileOrganizer(target_dir=tmp_path)
+    monkeypatch.setattr(
+        "builtins.open",
+        lambda *args, **kwargs: (_ for _ in ()).throw(OSError("read failed")),
+    )
+
+    assert organizer._calculate_hash(source) is None
+    assert "Could not read" in capsys.readouterr().out
+
+
+def test_permission_error_during_directory_scan(tmp_path, monkeypatch):
+    organizer = FileOrganizer(target_dir=tmp_path)
+
+    def deny(_path):
+        raise PermissionError("access denied")
+
+    # Patch the class method rather than the individual PosixPath instance.
+    # Path instances use immutable/slot-based attributes, so assigning
+    # organizer.target_dir.iterdir directly raises AttributeError.
+    monkeypatch.setattr(Path, "iterdir", deny)
+    summary = organizer.run()
+
+    assert summary.found == 0
+    assert summary.errors == 1
+
+
+def test_move_permission_error_is_counted(tmp_path, monkeypatch):
+    source = tmp_path / "test.txt"
+    source.write_text("hello")
+    organizer = FileOrganizer(target_dir=tmp_path)
+
+    def deny(*args, **kwargs):
+        raise PermissionError("move denied")
+
+    monkeypatch.setattr("file_organizer.organizer.shutil.move", deny)
+    summary = organizer.run()
+
+    assert summary.moved == 0
+    assert summary.errors == 1
+
+
+def test_move_os_error_is_counted(tmp_path, monkeypatch):
+    source = tmp_path / "test.txt"
+    source.write_text("hello")
+    organizer = FileOrganizer(target_dir=tmp_path)
+
+    def fail(*args, **kwargs):
+        raise OSError("disk failure")
+
+    monkeypatch.setattr("file_organizer.organizer.shutil.move", fail)
+    summary = organizer.run()
+
+    assert summary.moved == 0
+    assert summary.errors == 1
 
 
 def test_custom_config(tmp_path):
