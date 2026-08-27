@@ -191,7 +191,15 @@ def test_cli_main_invalid_config(monkeypatch, tmp_path, capsys):
     config_file = tmp_path / "config.json"
     config_file.write_text("not json")
     monkeypatch.setattr(
-        sys, "argv", ["file-organizer", str(tmp_path), "--yes", "--config", str(config_file)]
+        sys,
+        "argv",
+        [
+            "file-organizer",
+            str(tmp_path),
+            "--yes",
+            "--config",
+            str(config_file),
+        ],
     )
 
     with pytest.raises(SystemExit) as exc_info:
