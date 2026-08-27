@@ -20,7 +20,13 @@ class OrganizerSummary:
 
 
 class FileOrganizer:
-    def __init__(self, target_dir: Path, categories: dict[str, list[str]] | None = None, dry_run: bool = False, recursive: bool = False):
+    def __init__(
+        self,
+        target_dir: Path,
+        categories: dict[str, list[str]] | None = None,
+        dry_run: bool = False,
+        recursive: bool = False,
+    ):
         self.target_dir = target_dir.resolve()
         self.categories = categories if categories is not None else DEFAULT_CATEGORIES
         self.dry_run = dry_run
@@ -39,8 +45,13 @@ class FileOrganizer:
             print(f"Warning: Could not read {file_path} for hashing: {e}")
             return None
 
-    def _get_safe_destination(self, source_path: Path, dest_dir: Path) -> tuple[Path, bool]:
-        """Find a safe filename using file (1).ext format if a collision occurs. Returns (dest_path, collision_occurred)."""
+    def _get_safe_destination(
+        self, source_path: Path, dest_dir: Path
+    ) -> tuple[Path, bool]:
+        """Find a safe filename using file (1).ext format if a collision occurs.
+
+        Returns (dest_path, collision_occurred).
+        """
         base_name = source_path.stem
         ext = source_path.suffix
 
@@ -58,7 +69,7 @@ class FileOrganizer:
     def _is_safe_to_process(self, path: Path) -> bool:
         """Check if a file should be skipped (hidden or system file)."""
         # Skip hidden files (starting with .)
-        if path.name.startswith('.'):
+        if path.name.startswith("."):
             return False
         # Do not process symbolic links unless required (safest default is to ignore)
         return not path.is_symlink()
@@ -68,12 +79,18 @@ class FileOrganizer:
         summary = OrganizerSummary()
 
         if not self.target_dir.exists():
-            print(f"Error: Target directory '{self.target_dir}' does not exist.", file=sys.stderr)
+            print(
+                f"Error: Target directory '{self.target_dir}' does not exist.",
+                file=sys.stderr,
+            )
             summary.errors += 1
             return summary
 
         if not self.target_dir.is_dir():
-            print(f"Error: Target '{self.target_dir}' is not a directory.", file=sys.stderr)
+            print(
+                f"Error: Target '{self.target_dir}' is not a directory.",
+                file=sys.stderr,
+            )
             summary.errors += 1
             return summary
 
@@ -88,7 +105,13 @@ class FileOrganizer:
                     root_path = Path(root)
 
                     # Avoid walking into newly created category folders or existing ones
-                    dirs[:] = [d for d in dirs if not d.startswith('.') and d not in self.categories and d != "Other"]
+                    dirs[:] = [
+                        d
+                        for d in dirs
+                        if not d.startswith(".")
+                        and d not in self.categories
+                        and d != "Other"
+                    ]
 
                     for file in files:
                         file_path = root_path / file
@@ -99,7 +122,10 @@ class FileOrganizer:
                     if item.is_file() and self._is_safe_to_process(item):
                         files_to_process.append(item)
         except PermissionError as e:
-            print(f"Error: Permission denied accessing directory contents: {e}", file=sys.stderr)
+            print(
+                f"Error: Permission denied accessing directory contents: {e}",
+                file=sys.stderr,
+            )
             summary.errors += 1
             return summary
 
@@ -125,7 +151,15 @@ class FileOrganizer:
                     summary.collisions_handled += 1
 
                 if self.dry_run:
-                    print(f"[DRY-RUN] Would move: {file_path.relative_to(self.target_dir) if self.recursive else file_path.name} -> {category}/{dest_path.name}")
+                    display_path = (
+                        file_path.relative_to(self.target_dir)
+                        if self.recursive
+                        else file_path.name
+                    )
+                    print(
+                        f"[DRY-RUN] Would move: {display_path} -> "
+                        f"{category}/{dest_path.name}"
+                    )
                 else:
                     dest_dir.mkdir(exist_ok=True, parents=True)
                     shutil.move(str(file_path), str(dest_path))
@@ -133,7 +167,10 @@ class FileOrganizer:
 
                 summary.moved += 1
             except PermissionError:
-                print(f"Error: Permission denied moving {file_path.name}", file=sys.stderr)
+                print(
+                    f"Error: Permission denied moving {file_path.name}",
+                    file=sys.stderr,
+                )
                 summary.errors += 1
             except OSError as e:
                 print(f"Error processing {file_path.name}: {e}", file=sys.stderr)

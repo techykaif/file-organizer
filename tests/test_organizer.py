@@ -8,8 +8,8 @@ def test_get_category_for_extension():
     assert get_category_for_extension(".txt", DEFAULT_CATEGORIES) == "Documents"
     assert get_category_for_extension(".unknown", DEFAULT_CATEGORIES) == "Other"
 
+
 def test_dry_run(tmp_path):
-    # Setup test directory
     (tmp_path / "test1.txt").write_text("hello")
     (tmp_path / "test2.jpg").write_text("image")
 
@@ -18,12 +18,11 @@ def test_dry_run(tmp_path):
 
     assert summary.moved == 2
     assert summary.errors == 0
-
-    # Assert nothing was actually moved
     assert (tmp_path / "test1.txt").exists()
     assert (tmp_path / "test2.jpg").exists()
     assert not (tmp_path / "Documents").exists()
     assert not (tmp_path / "Images").exists()
+
 
 def test_actual_run(tmp_path):
     (tmp_path / "test1.txt").write_text("hello")
@@ -35,18 +34,18 @@ def test_actual_run(tmp_path):
 
     assert summary.moved == 3
     assert summary.errors == 0
-
     assert not (tmp_path / "test1.txt").exists()
     assert (tmp_path / "Documents" / "test1.txt").exists()
     assert (tmp_path / "Images" / "test2.jpg").exists()
     assert (tmp_path / "Other" / "unknown.xyz").exists()
+
 
 def test_filename_collision(tmp_path):
     (tmp_path / "test.txt").write_text("content 1")
 
     docs_dir = tmp_path / "Documents"
     docs_dir.mkdir()
-    (docs_dir / "test.txt").write_text("content 2") # Different content, same name
+    (docs_dir / "test.txt").write_text("content 2")
 
     organizer = FileOrganizer(target_dir=tmp_path, dry_run=False)
     summary = organizer.run()
@@ -54,12 +53,11 @@ def test_filename_collision(tmp_path):
     assert summary.moved == 1
     assert summary.errors == 0
     assert summary.collisions_handled == 1
-
     assert (docs_dir / "test.txt").exists()
     assert (docs_dir / "test (1).txt").exists()
-
     assert (docs_dir / "test.txt").read_text() == "content 2"
     assert (docs_dir / "test (1).txt").read_text() == "content 1"
+
 
 def test_duplicate_file_skipping(tmp_path):
     (tmp_path / "file1.txt").write_text("identical content")
@@ -68,35 +66,34 @@ def test_duplicate_file_skipping(tmp_path):
     organizer = FileOrganizer(target_dir=tmp_path, dry_run=False)
     summary = organizer.run()
 
-    # Should only move one, and skip the other
     assert summary.moved == 1
     assert summary.errors == 0
     assert summary.duplicates_skipped == 1
 
     docs_dir = tmp_path / "Documents"
-    # One file is moved
     assert len(list(docs_dir.iterdir())) == 1
-    # One is skipped and left behind
     left_behind = [f for f in tmp_path.iterdir() if f.is_file()]
     assert len(left_behind) == 1
+
 
 def test_recursive(tmp_path):
     sub = tmp_path / "subfolder"
     sub.mkdir()
     (sub / "test.txt").write_text("hello")
 
-    # Run without recursive
-    organizer_non_rec = FileOrganizer(target_dir=tmp_path, dry_run=False, recursive=False)
+    organizer_non_rec = FileOrganizer(
+        target_dir=tmp_path, dry_run=False, recursive=False
+    )
     summary_non_rec = organizer_non_rec.run()
     assert summary_non_rec.moved == 0
 
-    # Run with recursive
     organizer_rec = FileOrganizer(target_dir=tmp_path, dry_run=False, recursive=True)
     summary_rec = organizer_rec.run()
     assert summary_rec.moved == 1
 
     assert (tmp_path / "Documents" / "test.txt").exists()
     assert not (sub / "test.txt").exists()
+
 
 def test_hidden_file_skipping(tmp_path):
     (tmp_path / ".hidden.txt").write_text("hidden")
@@ -108,36 +105,31 @@ def test_hidden_file_skipping(tmp_path):
     assert summary.errors == 0
     assert (tmp_path / ".hidden.txt").exists()
 
+
 def test_symlink_skipping(tmp_path):
     import os
-    # Create a real file
+
     real_file = tmp_path / "real.txt"
     real_file.write_text("real content")
-    # Create a symlink to it
     symlink_file = tmp_path / "link.txt"
     os.symlink(real_file, symlink_file)
 
     organizer = FileOrganizer(target_dir=tmp_path, dry_run=False)
     summary = organizer.run()
 
-    # The real file should move, the symlink should be ignored/skipped
-    # But wait, does the symlink move?
-    # _is_safe_to_process skips symlinks.
-    # The real file will be moved, and the symlink will become broken but left behind.
     assert summary.moved == 1
     assert summary.errors == 0
     assert not real_file.exists()
     assert symlink_file.is_symlink()
 
+
 def test_invalid_target_dir(tmp_path):
-    # Directory does not exist
     not_exist = tmp_path / "does_not_exist"
     organizer = FileOrganizer(target_dir=not_exist)
     summary = organizer.run()
     assert summary.moved == 0
     assert summary.errors == 1
 
-    # Target is a file, not a directory
     is_file = tmp_path / "file.txt"
     is_file.write_text("not a dir")
     organizer2 = FileOrganizer(target_dir=is_file)
@@ -145,16 +137,19 @@ def test_invalid_target_dir(tmp_path):
     assert summary2.moved == 0
     assert summary2.errors == 1
 
+
 def test_custom_config(tmp_path):
     (tmp_path / "code.py").write_text("print('hello')")
     (tmp_path / "data.csv").write_text("1,2,3")
 
     custom_categories = {
         "PythonFiles": [".py"],
-        "DataFiles": [".csv"]
+        "DataFiles": [".csv"],
     }
 
-    organizer = FileOrganizer(target_dir=tmp_path, categories=custom_categories, dry_run=False)
+    organizer = FileOrganizer(
+        target_dir=tmp_path, categories=custom_categories, dry_run=False
+    )
     summary = organizer.run()
 
     assert summary.moved == 2
