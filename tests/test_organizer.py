@@ -1,3 +1,5 @@
+from pathlib import Path
+
 from file_organizer.config import DEFAULT_CATEGORIES, get_category_for_extension
 from file_organizer.organizer import FileOrganizer
 
@@ -169,10 +171,13 @@ def test_hash_error_is_non_fatal(tmp_path, monkeypatch, capsys):
 def test_permission_error_during_directory_scan(tmp_path, monkeypatch):
     organizer = FileOrganizer(target_dir=tmp_path)
 
-    def deny(_):
+    def deny(_path):
         raise PermissionError("access denied")
 
-    monkeypatch.setattr(organizer.target_dir, "iterdir", deny)
+    # Patch the class method rather than the individual PosixPath instance.
+    # Path instances use immutable/slot-based attributes, so assigning
+    # organizer.target_dir.iterdir directly raises AttributeError.
+    monkeypatch.setattr(Path, "iterdir", deny)
     summary = organizer.run()
 
     assert summary.found == 0
