@@ -98,9 +98,7 @@ def test_cli_custom_config(tmp_path):
     config_file = tmp_path / "config.json"
     config_file.write_text('{"Data": [".csv"]}')
 
-    result = run_cli_module(
-        str(tmp_path), "--yes", "--config", str(config_file)
-    )
+    result = run_cli_module(str(tmp_path), "--yes", "--config", str(config_file))
 
     assert result.returncode == 0
     assert (tmp_path / "Data" / "data.csv").exists()
@@ -110,9 +108,7 @@ def test_cli_invalid_config_json(tmp_path):
     config_file = tmp_path / "config.json"
     config_file.write_text("invalid json")
 
-    result = run_cli_module(
-        str(tmp_path), "--yes", "--config", str(config_file)
-    )
+    result = run_cli_module(str(tmp_path), "--yes", "--config", str(config_file))
 
     assert result.returncode == 1
     assert "Error loading configuration" in result.stderr
@@ -123,9 +119,7 @@ def test_cli_config_must_be_object(tmp_path):
     config_file = tmp_path / "config.json"
     config_file.write_text("[]")
 
-    result = run_cli_module(
-        str(tmp_path), "--yes", "--config", str(config_file)
-    )
+    result = run_cli_module(str(tmp_path), "--yes", "--config", str(config_file))
 
     assert result.returncode == 1
     assert "Configuration must be a JSON object" in result.stderr
@@ -140,22 +134,15 @@ def test_cli_missing_config(tmp_path):
     assert "Configuration file not found" in result.stderr
 
 
-def test_cli_confirmation_declined(tmp_path):
-    (tmp_path / "test.txt").write_text("hello")
-
-    result = run_cli_module(str(tmp_path), "--yes=false")
-
-    assert result.returncode != 0
-
-
 def test_cli_main_confirmation_declined(monkeypatch, tmp_path, capsys):
+    monkeypatch.setattr(sys, "argv", ["file-organizer", str(tmp_path)])
     monkeypatch.setattr("builtins.input", lambda _: "n")
 
     with pytest.raises(SystemExit) as exc_info:
-        cli.main.__wrapped__() if hasattr(cli.main, "__wrapped__") else cli.main()
+        cli.main()
 
-    assert exc_info.value.code == 2
-    assert "Cancelled" not in capsys.readouterr().out
+    assert exc_info.value.code == 0
+    assert "Operation cancelled." in capsys.readouterr().out
 
 
 def test_cli_main_summary_and_success(monkeypatch, tmp_path, capsys):
@@ -164,7 +151,9 @@ def test_cli_main_summary_and_success(monkeypatch, tmp_path, capsys):
             self.kwargs = kwargs
 
         def run(self):
-            return OrganizerSummary(found=3, moved=2, duplicates_skipped=1, collisions_handled=1)
+            return OrganizerSummary(
+                found=3, moved=2, duplicates_skipped=1, collisions_handled=1
+            )
 
     monkeypatch.setattr(cli, "FileOrganizer", FakeOrganizer)
     monkeypatch.setattr(sys, "argv", ["file-organizer", str(tmp_path), "--yes"])
@@ -186,7 +175,9 @@ def test_cli_main_dry_run_summary(monkeypatch, tmp_path, capsys):
             self.kwargs = kwargs
 
         def run(self):
-            return OrganizerSummary(found=4, moved=4, duplicates_skipped=1, collisions_handled=2)
+            return OrganizerSummary(
+                found=4, moved=4, duplicates_skipped=1, collisions_handled=2
+            )
 
     monkeypatch.setattr(cli, "FileOrganizer", FakeOrganizer)
     monkeypatch.setattr(
@@ -257,13 +248,7 @@ def test_cli_argument_parsing(monkeypatch, tmp_path):
     monkeypatch.setattr(
         sys,
         "argv",
-        [
-            "file-organizer",
-            str(tmp_path),
-            "--yes",
-            "--dry-run",
-            "--recursive",
-        ],
+        ["file-organizer", str(tmp_path), "--yes", "--dry-run", "--recursive"],
     )
 
     with pytest.raises(SystemExit) as exc_info:
