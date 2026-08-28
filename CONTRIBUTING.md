@@ -2,6 +2,12 @@
 
 Thank you for considering a contribution to `kaif-file-organizer`.
 
+## Project and license model
+
+`kaif-file-organizer` is source-available, not an open-source project. The source is available for local inspection, testing, evaluation, and other permitted non-commercial use under the terms in [`LICENSE`](LICENSE).
+
+Commercial use, resale, commercial redistribution, paid hosted use, or incorporation of a substantial portion of the Software into a commercial product or service requires prior written authorization from the copyright holder.
+
 ## Development environment
 
 The project uses [`uv`](https://docs.astral.sh/uv/) and a committed `uv.lock` so development dependencies are reproducible.
@@ -28,6 +34,15 @@ The project uses [`uv`](https://docs.astral.sh/uv/) and a committed `uv.lock` so
    ```
 
 No separate virtual environment is required; `uv` manages the project environment.
+
+## Proposing features and fixes
+
+- **Bug reports:** Open a GitHub Issue with a clear reproduction, expected behavior, actual behavior, and relevant environment details.
+- **Feature requests:** Open an Issue describing the problem, proposed behavior, and why the change would be useful before starting a substantial implementation.
+- **Implementations:** Submit a Pull Request when you have a working fix or feature. The maintainer will review the implementation and may request changes before acceptance.
+- **Official project changes:** A feature or fix becomes part of the official project only after the maintainer reviews and merges the Pull Request.
+
+Opening an Issue or Pull Request does not itself grant permission for commercial use, resale, or commercial redistribution of the Software.
 
 ## Verification before opening a PR
 
@@ -96,6 +111,7 @@ When testing organization behavior, prefer `--dry-run` first and use a temporary
 - Preserve the project's safety-first behavior: do not introduce silent overwrites or automatic deletion.
 - Keep filesystem mutations and error handling explicit and testable.
 - Avoid unrelated formatting or refactoring in feature commits.
+- Retain the copyright and license notices in permitted copies and forks.
 
 ## Pull requests
 
@@ -116,3 +132,7 @@ GitHub Actions runs the authoritative CI checks on pushes and pull requests targ
 Please open an issue with a clear reproduction, expected behavior, actual behavior, and relevant environment details:
 
 https://github.com/techykaif/file-organizer/issues
+
+## Commercial licensing
+
+For commercial licensing, resale, commercial redistribution, paid hosted use, or other uses requiring authorization, contact the copyright holder through the repository's official issue tracker or the contact information published by the copyright holder.
