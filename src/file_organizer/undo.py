@@ -28,7 +28,7 @@ def _load_history(target_dir: Path) -> list[list[MoveRecord]]:
     try:
         payload = json.loads(path.read_text(encoding="utf-8"))
         if not isinstance(payload, list):
-            raise ValueError("history must be a list")
+            raise TypeError("history must be a list")
         return [
             [MoveRecord(str(item["source"]), str(item["destination"])) for item in operation]
             for operation in payload
@@ -41,7 +41,10 @@ def _save_history(target_dir: Path, history: list[list[MoveRecord]]) -> None:
     path = _history_path(target_dir)
     if history:
         path.write_text(
-            json.dumps([[asdict(record) for record in operation] for operation in history], indent=2),
+            json.dumps(
+                [[asdict(record) for record in operation] for operation in history],
+                indent=2,
+            ),
             encoding="utf-8",
         )
     elif path.exists():
