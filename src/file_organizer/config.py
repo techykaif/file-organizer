@@ -31,13 +31,27 @@ def load_config(config_path: Path) -> dict[str, list[str]]:
         try:
             user_categories = json.load(f)
             if not isinstance(user_categories, dict):
-                raise TypeError(
+                raise ValueError(
                     "Configuration must be a JSON object mapping category names "
                     "to lists of extensions."
                 )
+
+            for category, extensions in user_categories.items():
+                if not isinstance(extensions, list):
+                    raise ValueError(
+                        f"Configuration category '{category}' must contain a list "
+                        "of extensions."
+                    )
+                for extension in extensions:
+                    if not isinstance(extension, str) or not extension:
+                        raise ValueError(
+                            f"Configuration category '{category}' contains an "
+                            "extension that must be a non-empty string."
+                        )
+
             return user_categories
         except json.JSONDecodeError as e:
-            raise ValueError(f"Invalid JSON in config file: {e}")
+            raise ValueError(f"Invalid JSON in config file: {e}") from e
 
 
 def get_category_for_extension(ext: str, categories: dict[str, list[str]]) -> str:
