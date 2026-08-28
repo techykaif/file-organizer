@@ -1,4 +1,5 @@
 import json
+import os
 
 import pytest
 
@@ -98,12 +99,14 @@ def test_undo_rejects_paths_outside_target_directory(tmp_path):
     destination.write_text("content")
     (tmp_path / HISTORY_FILENAME).write_text(
         json.dumps(
-            [[
-                {
-                    "source": str(outside),
-                    "destination": str(destination),
-                }
-            ]]
+            [
+                [
+                    {
+                        "source": str(outside),
+                        "destination": str(destination),
+                    }
+                ]
+            ]
         )
     )
 
@@ -114,22 +117,19 @@ def test_undo_rejects_paths_outside_target_directory(tmp_path):
     assert (tmp_path / HISTORY_FILENAME).exists()
 
 
-def test_history_save_is_recoverable_when_replace_fails(tmp_path, monkeypatch):
+def test_history_save_cleans_up_temp_file_when_replace_fails(tmp_path, monkeypatch):
     source = tmp_path / "report.txt"
     destination = tmp_path / "Documents" / "report.txt"
     destination.parent.mkdir()
     destination.write_text("report")
 
-    original_replace = __import__("os").replace
-
-    def fail_once(src, dst):
+    def fail_replace(src, dst):
         raise OSError("replace failed")
 
-    monkeypatch.setattr("file_organizer.undo.os.replace", fail_once)
+    monkeypatch.setattr(os, "replace", fail_replace)
 
     with pytest.raises(OSError, match="replace failed"):
         record_operation(tmp_path, [MoveRecord(str(source), str(destination))])
 
     assert not (tmp_path / HISTORY_FILENAME).exists()
     assert list(tmp_path.glob(".file-organizer-history-*") ) == []
-    monkeypatch.setattr("file_organizer.undo.os.replace", original_replace)
