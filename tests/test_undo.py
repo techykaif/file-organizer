@@ -132,4 +132,4 @@ def test_history_save_cleans_up_temp_file_when_replace_fails(tmp_path, monkeypat
         record_operation(tmp_path, [MoveRecord(str(source), str(destination))])
 
     assert not (tmp_path / HISTORY_FILENAME).exists()
-    assert list(tmp_path.glob(".file-organizer-history-*") ) == []
+    assert list(tmp_path.glob(".file-organizer-history-*")) == []
