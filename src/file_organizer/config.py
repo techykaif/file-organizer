@@ -32,7 +32,8 @@ def load_config(config_path: Path) -> dict[str, list[str]]:
             user_categories = json.load(f)
             if not isinstance(user_categories, dict):
                 raise TypeError(
-                    "Configuration must be a JSON object mapping category names to lists of extensions."
+                    "Configuration must be a JSON object mapping category names "
+                    "to lists of extensions."
                 )
             return user_categories
         except json.JSONDecodeError as e:
