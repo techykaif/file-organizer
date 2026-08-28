@@ -30,7 +30,10 @@ def _load_history(target_dir: Path) -> list[list[MoveRecord]]:
         if not isinstance(payload, list):
             raise TypeError("history must be a list")
         return [
-            [MoveRecord(str(item["source"]), str(item["destination"])) for item in operation]
+            [
+                MoveRecord(str(item["source"]), str(item["destination"]))
+                for item in operation
+            ]
             for operation in payload
         ]
     except (OSError, ValueError, TypeError, KeyError, json.JSONDecodeError) as exc:
