@@ -62,9 +62,13 @@ def main():
             sys.exit(1)
 
     if not args.yes and not args.dry_run:
-        confirm = input(
-            f"Are you sure you want to organize '{target_path.resolve()}'? [y/N]: "
-        ).strip().lower()
+        confirm = (
+            input(
+                f"Are you sure you want to organize '{target_path.resolve()}'? [y/N]: "
+            )
+            .strip()
+            .lower()
+        )
         if confirm not in ["y", "yes"]:
             logger.info("Operation cancelled.")
             sys.exit(0)
