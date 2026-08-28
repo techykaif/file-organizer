@@ -29,7 +29,12 @@ def test_validate_plan_rejects_overlapping_paths(tmp_path):
     destination = tmp_path / "b.txt"
 
     with pytest.raises(TransactionError, match="overlapping"):
-        validate_plan([PlannedMove(source, destination), PlannedMove(destination, tmp_path / "c.txt")])
+        validate_plan(
+            [
+                PlannedMove(source, destination),
+                PlannedMove(destination, tmp_path / "c.txt"),
+            ]
+        )
 
 
 def test_execute_transaction_returns_records(tmp_path):
