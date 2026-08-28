@@ -30,8 +30,7 @@ def main() -> None:
         "--config",
         type=str,
         help=(
-            "Path to a custom JSON configuration file mapping categories to "
-            "extensions."
+            "Path to a custom JSON configuration file mapping categories to extensions."
         ),
     )
     parser.add_argument(
