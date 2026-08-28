@@ -8,8 +8,12 @@ from pathlib import Path
 
 from file_organizer.config import DEFAULT_CATEGORIES, get_category_for_extension
 from file_organizer.logging_config import get_logger
-from file_organizer.transaction import PlannedMove, TransactionError, execute_transaction
-from file_organizer.undo import MoveRecord, record_operation
+from file_organizer.transaction import (
+    PlannedMove,
+    TransactionError,
+    execute_transaction,
+)
+from file_organizer.undo import record_operation
 
 logger = get_logger()
 
