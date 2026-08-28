@@ -29,7 +29,31 @@ def test_load_config_requires_object(tmp_path):
     config_path = tmp_path / "config.json"
     config_path.write_text("[]")
 
-    with pytest.raises(TypeError, match="Configuration must be a JSON object"):
+    with pytest.raises(ValueError, match="Configuration must be a JSON object"):
+        load_config(config_path)
+
+
+def test_load_config_rejects_non_list_value(tmp_path):
+    config_path = tmp_path / "config.json"
+    config_path.write_text(json.dumps({"Data": ".csv"}))
+
+    with pytest.raises(ValueError, match="must contain a list"):
+        load_config(config_path)
+
+
+def test_load_config_rejects_non_string_extension(tmp_path):
+    config_path = tmp_path / "config.json"
+    config_path.write_text(json.dumps({"Data": [".csv", 123]}))
+
+    with pytest.raises(ValueError, match="must be a non-empty string"):
+        load_config(config_path)
+
+
+def test_load_config_rejects_empty_extension(tmp_path):
+    config_path = tmp_path / "config.json"
+    config_path.write_text(json.dumps({"Data": [".csv", ""]}))
+
+    with pytest.raises(ValueError, match="must be a non-empty string"):
         load_config(config_path)
 
 
