@@ -29,10 +29,7 @@ def main() -> None:
     parser.add_argument(
         "--config",
         type=str,
-        help=(
-            "Path to a custom JSON configuration file mapping categories "
-            "to extensions."
-        ),
+        help="Path to a custom JSON configuration file mapping categories to extensions.",
     )
     parser.add_argument(
         "--yes",
