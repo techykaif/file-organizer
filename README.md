@@ -128,6 +128,8 @@ cd file-organizer
 uv sync --locked --extra dev
 ```
 
+The repository's CI also performs this setup from a **fresh clone in a clean directory**, then runs the same verification commands and validates the built wheel. This protects the documented setup path from drifting away from what CI actually verifies.
+
 ### Running Tests
 
 Execute the full test suite:
@@ -167,18 +169,18 @@ uv build
 src/
 └── file_organizer/
     ├── __init__.py      # Package metadata
-    ├── cli.py           # CLI entry point and argument parsing
-    ├── config.py        # Default categories and configuration loading
+    ├── cli.py            # CLI entry point and argument parsing
+    ├── config.py         # Default categories and configuration loading
     ├── logging_config.py # Centralized structured logging configuration
-    ├── organizer.py     # Core file moving and safety logic
+    ├── organizer.py      # Core file moving and safety logic
     └── undo.py           # Operation history and safe rollback
 
 tests/
-├── test_cli.py          # CLI integration tests
-├── test_cli_undo.py     # Undo CLI integration tests
-├── test_logging_config.py # Logging configuration tests
-├── test_organizer.py    # Unit tests for core logic
-└── test_undo.py         # Undo and recovery tests
+├── test_cli.py             # CLI integration tests
+├── test_cli_undo.py        # Undo CLI integration tests
+├── test_logging_config.py  # Logging configuration tests
+├── test_organizer.py       # Unit tests for core logic
+└── test_undo.py            # Undo and recovery tests
 ```
 
 ## Release & Development Workflow
@@ -186,6 +188,7 @@ tests/
 This project uses standard GitHub Actions for CI and CD.
 
 - **Tests**: Automatically run on every push and pull request to `main`.
+- **Fresh-clone verification**: CI clones the repository into a clean directory and validates the documented locked setup, tests, type checks, build, and wheel installation.
 - **Type checking**: Pyright runs against the `src/` package in CI.
 - **Reproducibility**: CI installs development dependencies with `uv sync --locked` using the committed `uv.lock`.
 - **Security**: Dependency auditing runs with `pip-audit`, and CodeQL provides separate static security scanning.

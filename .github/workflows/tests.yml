@@ -25,7 +25,7 @@ jobs:
         python-version: ${{ matrix.python-version }}
 
     - name: Install uv
-      uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9
+      uses: astral-sh/setup-uv@v7
       with:
         version: "0.12.6"
         enable-cache: true
@@ -63,6 +63,51 @@ jobs:
         wheel-venv/bin/file-organizer --help
         rm -rf wheel-venv
 
+  fresh-clone:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Set up Python
+      uses: actions/setup-python@v7
+      with:
+        python-version: "3.14"
+
+    - name: Install uv
+      uses: astral-sh/setup-uv@v7
+      with:
+        version: "0.12.6"
+
+    - name: Clone repository into a clean directory
+      env:
+        GITHUB_TOKEN: ${{ github.token }}
+      run: |
+        set -euo pipefail
+        REF="${GITHUB_HEAD_REF:-main}"
+        git clone --depth 1 --branch "$REF" "https://x-access-token:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" fresh-clone
+
+    - name: Install from committed lockfile
+      working-directory: fresh-clone
+      run: |
+        uv sync --locked --extra dev
+
+    - name: Run documented verification commands
+      working-directory: fresh-clone
+      run: |
+        uv run --locked ruff check .
+        uv run --locked ruff format --check .
+        uvx --from pyright==1.1.411 pyright
+        uv run --locked pytest --cov=file_organizer --cov-fail-under=85 tests/
+        uv build
+
+    - name: Verify built wheel
+      working-directory: fresh-clone
+      run: |
+        python -m venv wheel-venv
+        WHEEL_PATH=$(ls dist/*.whl)
+        wheel-venv/bin/pip install "$WHEEL_PATH"
+        wheel-venv/bin/file-organizer --version
+        wheel-venv/bin/file-organizer --help
+        rm -rf wheel-venv
+
   audit:
     runs-on: ubuntu-latest
     steps:
@@ -73,12 +118,16 @@ jobs:
       with:
         python-version: "3.14"
 
-    - name: Install dependencies
+    - name: Install uv
+      uses: astral-sh/setup-uv@v7
+      with:
+        version: "0.12.6"
+
+    - name: Install locked dependencies
       run: |
-        python -m pip install --upgrade pip
-        pip install ".[dev]"
-        pip install pip-audit
+        uv sync --locked --extra dev
+        uv pip install --python .venv/bin/python pip-audit
 
     - name: Audit dependencies
       run: |
-        pip-audit
+        uv run --locked pip-audit
