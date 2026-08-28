@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import hashlib
-import logging
 import os
 import shutil
 from dataclasses import dataclass
@@ -37,6 +36,7 @@ class FileOrganizer:
         self.processed_hashes: set[str] = set()
 
     def _calculate_hash(self, file_path: Path) -> str | None:
+        """Calculate MD5 hash of a file safely."""
         try:
             hash_algo = hashlib.md5()
             with open(file_path, "rb") as f:
@@ -50,6 +50,10 @@ class FileOrganizer:
     def _get_safe_destination(
         self, source_path: Path, dest_dir: Path
     ) -> tuple[Path, bool]:
+        """Find a safe filename using file (1).ext format if a collision occurs.
+
+        Returns (dest_path, collision_occurred).
+        """
         base_name = source_path.stem
         ext = source_path.suffix
         dest_path = dest_dir / source_path.name
@@ -62,11 +66,15 @@ class FileOrganizer:
         return dest_path, collision
 
     def _is_safe_to_process(self, path: Path) -> bool:
+        """Check if a file should be skipped (hidden or system file)."""
+        # Skip hidden files (starting with .)
         if path.name.startswith("."):
             return False
+        # Do not process symbolic links unless required (safest default is to ignore)
         return not path.is_symlink()
 
     def run(self) -> OrganizerSummary:
+        """Run the file organization. Returns an OrganizerSummary."""
         summary = OrganizerSummary()
 
         if not self.target_dir.exists():
@@ -79,11 +87,15 @@ class FileOrganizer:
             summary.errors += 1
             return summary
 
+        # We will collect files to move to avoid modifying the directory while iterating
         files_to_process: list[Path] = []
         try:
             if self.recursive:
+                # Exclude target category directories to avoid moving files that are already organized
+                # Or simply skip iterating into them if they match our categories.
                 for root, dirs, files in os.walk(self.target_dir):
                     root_path = Path(root)
+                    # Avoid walking into newly created category folders or existing ones
                     dirs[:] = [
                         d
                         for d in dirs
@@ -109,6 +121,7 @@ class FileOrganizer:
 
         for file_path in files_to_process:
             try:
+                # Hash check for duplicates
                 file_hash = self._calculate_hash(file_path)
                 if file_hash:
                     if file_hash in self.processed_hashes:
