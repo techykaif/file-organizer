@@ -1,83 +1,118 @@
 # Contributing
 
-First off, thank you for considering contributing to `kaif-file-organizer`. It's people like you that make open source such a great community!
+Thank you for considering a contribution to `kaif-file-organizer`.
 
-## Getting Started
+## Development environment
+
+The project uses [`uv`](https://docs.astral.sh/uv/) and a committed `uv.lock` so development dependencies are reproducible.
 
 ### Prerequisites
+
 - Python 3.12, 3.13, or 3.14
 - Git
+- `uv`
 
-### Development Setup
-
-The repository uses a standard `src/` layout. Follow these steps to set up your local development environment:
+### Setup
 
 1. Clone the repository:
+
    ```bash
    git clone https://github.com/techykaif/file-organizer.git
    cd file-organizer
    ```
 
-2. Create and activate a virtual environment:
+2. Install the project and development dependencies from the lockfile:
+
    ```bash
-   python3 -m venv .venv
-   source .venv/bin/activate
+   uv sync --locked --extra dev
    ```
 
-3. Install the package in editable mode with development dependencies:
-   ```bash
-   pip install -e ".[dev]"
-   ```
+No separate virtual environment is required; `uv` manages the project environment.
 
-### Running Tests
+## Verification before opening a PR
 
-We use `pytest` for our test suite. To run the tests:
+Run the same core checks used by CI:
+
+### Tests and coverage
+
 ```bash
-pytest tests/
+uv run --locked pytest --cov=file_organizer --cov-fail-under=85 tests/
 ```
 
-### Running Ruff
+The repository requires at least 85% coverage.
 
-We use `ruff` for linting and code formatting. To run the checks:
+### Ruff
+
+Run both linting and formatting checks:
+
 ```bash
-ruff check .
+uv run --locked ruff check .
+uv run --locked ruff format --check .
 ```
 
-### Building the Package
+To apply formatting locally:
 
-To build the source distribution and wheel:
 ```bash
-python -m pip install build
-python -m build
+uv run --locked ruff format .
 ```
 
-### Testing the CLI
+### Type checking
 
-Once installed in editable mode, you can test the CLI commands locally to ensure your changes work as expected:
+CI uses a pinned Pyright version:
+
 ```bash
-file-organizer --help
-file-organizer --version
-file-organizer ./test_directory --dry-run
+uvx --from pyright==1.1.411 pyright
 ```
 
-## Making Changes
+### Build verification
 
-- **Focused changes:** Keep your pull requests focused on a single issue or feature. This makes them easier to review and maintain.
-- **Tests:** Write or update tests for any changed functionality.
-- **Documentation:** Update the `README.md` or other documentation if your changes affect how users interact with the tool.
+```bash
+uv build
+```
 
-## Pull Requests
+CI also installs the generated wheel into a clean environment as an installation smoke test.
 
-When submitting a pull request, please ensure:
-- The PR description is clear and explains the reason for the change.
-- You have run `pytest tests/` and all tests pass.
-- You have run `ruff check .` and there are no linting errors.
-- There are no unrelated or formatting-only changes mixed in with your feature/fix.
+### Dependency audit
 
-## Reporting Bugs
+CI audits the installed environment for known vulnerable dependencies with `pip-audit`.
 
-We use GitHub Issues to track bugs and feature requests. 
-If you find a bug, please open an issue here:
-[https://github.com/techykaif/file-organizer/issues](https://github.com/techykaif/file-organizer/issues)
+## Testing the CLI
 
-Please use the provided issue templates to ensure you include all the necessary information.
+After syncing the environment, verify the CLI itself:
+
+```bash
+uv run file-organizer --help
+uv run file-organizer --version
+uv run file-organizer ./test_directory --dry-run
+```
+
+When testing organization behavior, prefer `--dry-run` first and use a temporary test directory for operations that actually move files.
+
+## Making changes
+
+- Keep each pull request focused on one feature, fix, or maintenance concern.
+- Add or update tests for changed behavior.
+- Update documentation when commands, configuration, safety guarantees, or user-facing behavior changes.
+- Preserve the project's safety-first behavior: do not introduce silent overwrites or automatic deletion.
+- Keep filesystem mutations and error handling explicit and testable.
+- Avoid unrelated formatting or refactoring in feature commits.
+
+## Pull requests
+
+Before submitting a pull request, ensure:
+
+- the full test suite passes;
+- coverage remains at or above 85%;
+- Ruff lint and format checks pass;
+- Pyright passes;
+- the package builds successfully;
+- documentation reflects the current development workflow;
+- the PR description explains the behavior being changed and how it was verified.
+
+GitHub Actions runs the authoritative CI checks on pushes and pull requests targeting `main`.
+
+## Reporting bugs
+
+Please open an issue with a clear reproduction, expected behavior, actual behavior, and relevant environment details:
+
+https://github.com/techykaif/file-organizer/issues

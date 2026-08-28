@@ -13,7 +13,9 @@ from file_organizer.undo import undo_last_operation
 def main() -> None:
     parser = argparse.ArgumentParser(
         prog="file-organizer",
-        description="A safe, general-purpose local file organizer and file-management CLI.",
+        description=(
+            "A safe, general-purpose local file organizer and file-management CLI."
+        ),
     )
     parser.add_argument("path", type=str, help="The directory to organize.")
     parser.add_argument(
@@ -27,7 +29,9 @@ def main() -> None:
     parser.add_argument(
         "--config",
         type=str,
-        help="Path to a custom JSON configuration file mapping categories to extensions.",
+        help=(
+            "Path to a custom JSON configuration file mapping categories to extensions."
+        ),
     )
     parser.add_argument(
         "--yes",
