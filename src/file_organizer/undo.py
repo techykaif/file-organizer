@@ -1,7 +1,9 @@
 from __future__ import annotations
 
 import json
+import os
 import shutil
+import tempfile
 from dataclasses import asdict, dataclass
 from pathlib import Path
 
@@ -29,29 +31,60 @@ def _load_history(target_dir: Path) -> list[list[MoveRecord]]:
         payload = json.loads(path.read_text(encoding="utf-8"))
         if not isinstance(payload, list):
             raise TypeError("history must be a list")
-        return [
-            [
-                MoveRecord(str(item["source"]), str(item["destination"]))
-                for item in operation
-            ]
-            for operation in payload
-        ]
-    except (OSError, ValueError, TypeError, KeyError, json.JSONDecodeError) as exc:
+
+        history: list[list[MoveRecord]] = []
+        for operation in payload:
+            if not isinstance(operation, list):
+                raise TypeError("each history operation must be a list")
+            records: list[MoveRecord] = []
+            for item in operation:
+                if not isinstance(item, dict):
+                    raise TypeError("each history record must be an object")
+                source = item.get("source")
+                destination = item.get("destination")
+                if not isinstance(source, str) or not source:
+                    raise TypeError("history source must be a non-empty string")
+                if not isinstance(destination, str) or not destination:
+                    raise TypeError("history destination must be a non-empty string")
+                records.append(MoveRecord(source, destination))
+            history.append(records)
+        return history
+    except (OSError, ValueError, TypeError, json.JSONDecodeError) as exc:
         raise ValueError(f"Invalid organizer history: {exc}") from exc
 
 
 def _save_history(target_dir: Path, history: list[list[MoveRecord]]) -> None:
     path = _history_path(target_dir)
-    if history:
-        path.write_text(
-            json.dumps(
-                [[asdict(record) for record in operation] for operation in history],
-                indent=2,
-            ),
+    if not history:
+        if path.exists():
+            path.unlink()
+        return
+
+    payload = json.dumps(
+        [[asdict(record) for record in operation] for operation in history],
+        indent=2,
+    )
+    temp_path: str | None = None
+    try:
+        with tempfile.NamedTemporaryFile(
+            mode="w",
             encoding="utf-8",
-        )
-    elif path.exists():
-        path.unlink()
+            dir=target_dir,
+            prefix=".file-organizer-history-",
+            delete=False,
+        ) as temp_file:
+            temp_file.write(payload)
+            temp_file.flush()
+            os.fsync(temp_file.fileno())
+            temp_path = temp_file.name
+        os.replace(temp_path, path)
+        temp_path = None
+    finally:
+        if temp_path is not None:
+            try:
+                os.unlink(temp_path)
+            except FileNotFoundError:
+                pass
 
 
 def record_operation(target_dir: Path, moves: list[MoveRecord]) -> None:
@@ -63,11 +96,23 @@ def record_operation(target_dir: Path, moves: list[MoveRecord]) -> None:
     _save_history(target_dir, history)
 
 
+def _safe_path(target_dir: Path, value: str) -> Path:
+    """Resolve a history path and reject paths outside the organizer root."""
+    root = target_dir.resolve()
+    candidate = Path(value).resolve(strict=False)
+    try:
+        candidate.relative_to(root)
+    except ValueError as exc:
+        raise ValueError(f"History path is outside target directory: {value}") from exc
+    return candidate
+
+
 def undo_last_operation(target_dir: Path) -> tuple[int, int]:
     """Undo the most recent successful organization operation.
 
     Returns (restored_count, error_count). Moves are reversed in reverse order.
-    Existing source paths are never overwritten.
+    Existing source paths are never overwritten, and history cannot move files
+    outside the organizer's target directory.
     """
     history = _load_history(target_dir)
     if not history:
@@ -80,9 +125,9 @@ def undo_last_operation(target_dir: Path) -> tuple[int, int]:
     remaining: list[MoveRecord] = []
 
     for record in reversed(operation):
-        source = Path(record.source)
-        destination = Path(record.destination)
         try:
+            source = _safe_path(target_dir, record.source)
+            destination = _safe_path(target_dir, record.destination)
             if not destination.exists():
                 raise FileNotFoundError(f"Moved file not found: {destination}")
             if source.exists():
@@ -91,10 +136,10 @@ def undo_last_operation(target_dir: Path) -> tuple[int, int]:
             shutil.move(str(destination), str(source))
             restored += 1
             logger.info("Restored: %s -> %s", destination.name, source)
-        except (OSError, shutil.Error) as exc:
+        except (OSError, shutil.Error, ValueError) as exc:
             errors += 1
             remaining.append(record)
-            logger.error("Could not restore %s: %s", destination, exc)
+            logger.error("Could not restore %s: %s", record.destination, exc)
 
     history[-1] = list(reversed(remaining))
     if not history[-1]:
