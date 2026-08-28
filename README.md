@@ -6,7 +6,7 @@
 
 [![Python Versions](https://img.shields.io/pypi/pyversions/kaif-file-organizer.svg)](https://pypi.org/project/kaif-file-organizer/)
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![License: Source-Available](https://img.shields.io/badge/license-source--available-blue.svg)](LICENSE)
 
 A safe, general-purpose local file organizer and file-management CLI that categorizes your files securely and predictably.
 
@@ -208,6 +208,18 @@ Releases are managed through GitHub Releases. Publishing a release triggers the 
 
 Contributions are welcome. See [CONTRIBUTING.md](CONTRIBUTING.md) for the complete development and pull-request workflow.
 
+Feature ideas and bug reports should be opened as GitHub Issues. If you implement a fix or feature, submit a Pull Request for maintainer review. A contribution becomes part of the official project only after it is reviewed and accepted.
+
+## License and commercial use
+
+This project is **source-available, not open-source**. The source may be downloaded, inspected, run locally, and modified for permitted non-commercial purposes under the terms in [`LICENSE`](LICENSE).
+
+Commercial use, resale, commercial redistribution, paid hosted use, or incorporation of a substantial portion of the Software into a commercial product or service requires **prior written authorization** from the copyright holder. Commercial authorization may require a separate paid license and agreed attribution terms.
+
+Please do not present the original Software as your own work or remove the copyright and license notices.
+
+For feature requests, bug reports, and proposed improvements, please use GitHub Issues and Pull Requests. All contributions are subject to maintainer review and acceptance.
+
 ## Links
 
 - **GitHub Repository**: https://github.com/techykaif/file-organizer
@@ -216,4 +228,4 @@ Contributions are welcome. See [CONTRIBUTING.md](CONTRIBUTING.md) for the comple
 
 ## License
 
-This project is licensed under the MIT License. See `LICENSE` for details.
+See [`LICENSE`](LICENSE) for the complete source-available license and commercial-use terms.
