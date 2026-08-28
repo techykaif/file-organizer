@@ -1,8 +1,11 @@
-from pathlib import Path
-
 import pytest
 
-from file_organizer.undo import HISTORY_FILENAME, MoveRecord, record_operation, undo_last_operation
+from file_organizer.undo import (
+    HISTORY_FILENAME,
+    MoveRecord,
+    record_operation,
+    undo_last_operation,
+)
 
 
 def test_record_and_undo_last_operation(tmp_path):
