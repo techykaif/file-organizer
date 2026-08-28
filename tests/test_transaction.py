@@ -49,7 +49,10 @@ def test_execute_transaction_returns_records(tmp_path):
         source.rename(destination)
 
     records = execute_transaction(
-        [PlannedMove(source_a, destination_a), PlannedMove(source_b, destination_b)],
+        [
+            PlannedMove(source_a, destination_a),
+            PlannedMove(source_b, destination_b),
+        ],
         move,
     )
 
@@ -76,7 +79,10 @@ def test_execute_transaction_rolls_back_completed_moves(tmp_path):
 
     with pytest.raises(TransactionError, match="Organization transaction failed"):
         execute_transaction(
-            [PlannedMove(source_a, destination_a), PlannedMove(source_b, destination_b)],
+            [
+                PlannedMove(source_a, destination_a),
+                PlannedMove(source_b, destination_b),
+            ],
             move,
         )
 
@@ -105,7 +111,10 @@ def test_execute_transaction_reports_rollback_failure(tmp_path):
 
     with pytest.raises(TransactionError, match="rollback failures"):
         execute_transaction(
-            [PlannedMove(source_a, destination_a), PlannedMove(source_b, destination_b)],
+            [
+                PlannedMove(source_a, destination_a),
+                PlannedMove(source_b, destination_b),
+            ],
             move,
         )
 
