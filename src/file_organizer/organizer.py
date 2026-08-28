@@ -146,9 +146,7 @@ class FileOrganizer:
                 else:
                     dest_dir.mkdir(exist_ok=True, parents=True)
                     shutil.move(str(file_path), str(dest_path))
-                    completed_moves.append(
-                        MoveRecord(str(file_path), str(dest_path))
-                    )
+                    completed_moves.append(MoveRecord(str(file_path), str(dest_path)))
                     logger.info(
                         "Moved: %s -> %s/%s", file_path.name, category, dest_path.name
                     )
