@@ -15,12 +15,32 @@ def main():
         description="A safe, general-purpose local file organizer and file-management CLI.",
     )
     parser.add_argument("path", type=str, help="The directory to organize.")
-    parser.add_argument("--dry-run", action="store_true", help="Show what would happen without making any changes.")
-    parser.add_argument("--recursive", action="store_true", help="Recursively process subdirectories.")
-    parser.add_argument("--config", type=str, help="Path to a custom JSON configuration file mapping categories to extensions.")
-    parser.add_argument("--yes", action="store_true", help="Skip any confirmation prompts (non-interactive mode).")
-    parser.add_argument("--verbose", action="store_true", help="Enable verbose informational logging.")
-    parser.add_argument("--version", action="version", version=f"%(prog)s {__version__}")
+    parser.add_argument(
+        "--dry-run",
+        action="store_true",
+        help="Show what would happen without making any changes.",
+    )
+    parser.add_argument(
+        "--recursive", action="store_true", help="Recursively process subdirectories."
+    )
+    parser.add_argument(
+        "--config",
+        type=str,
+        help="Path to a custom JSON configuration file mapping categories to extensions.",
+    )
+    parser.add_argument(
+        "--yes",
+        action="store_true",
+        help="Skip any confirmation prompts (non-interactive mode).",
+    )
+    parser.add_argument(
+        "--verbose",
+        action="store_true",
+        help="Enable verbose informational logging.",
+    )
+    parser.add_argument(
+        "--version", action="version", version=f"%(prog)s {__version__}"
+    )
 
     args = parser.parse_args()
     logger = configure_logging(logging.DEBUG if args.verbose else logging.INFO)
