@@ -42,6 +42,10 @@ jobs:
       run: |
         uv run --locked ruff format --check .
 
+    - name: Type check with Pyright
+      run: |
+        uvx --from pyright==1.1.411 pyright
+
     - name: Test with pytest
       run: |
         uv run --locked pytest --cov=file_organizer --cov-report=term-missing --cov-fail-under=85 tests/

@@ -8,6 +8,7 @@ from pathlib import Path
 
 from file_organizer.config import DEFAULT_CATEGORIES, get_category_for_extension
 from file_organizer.logging_config import get_logger
+from file_organizer.undo import MoveRecord, record_operation
 
 logger = get_logger()
 
@@ -67,15 +68,14 @@ class FileOrganizer:
 
     def _is_safe_to_process(self, path: Path) -> bool:
         """Check if a file should be skipped (hidden or system file)."""
-        # Skip hidden files (starting with .)
         if path.name.startswith("."):
             return False
-        # Do not process symbolic links unless required (safest default is to ignore)
         return not path.is_symlink()
 
     def run(self) -> OrganizerSummary:
         """Run the file organization. Returns an OrganizerSummary."""
         summary = OrganizerSummary()
+        completed_moves: list[MoveRecord] = []
 
         if not self.target_dir.exists():
             logger.error("Target directory '%s' does not exist.", self.target_dir)
@@ -87,15 +87,11 @@ class FileOrganizer:
             summary.errors += 1
             return summary
 
-        # We will collect files to move to avoid modifying the directory while iterating
         files_to_process: list[Path] = []
         try:
             if self.recursive:
-                # Exclude target category directories to avoid moving files that are already organized
-                # Or simply skip iterating into them if they match our categories.
                 for root, dirs, files in os.walk(self.target_dir):
                     root_path = Path(root)
-                    # Avoid walking into newly created category folders or existing ones
                     dirs[:] = [
                         d
                         for d in dirs
@@ -121,7 +117,6 @@ class FileOrganizer:
 
         for file_path in files_to_process:
             try:
-                # Hash check for duplicates
                 file_hash = self._calculate_hash(file_path)
                 if file_hash:
                     if file_hash in self.processed_hashes:
@@ -151,6 +146,7 @@ class FileOrganizer:
                 else:
                     dest_dir.mkdir(exist_ok=True, parents=True)
                     shutil.move(str(file_path), str(dest_path))
+                    completed_moves.append(MoveRecord(str(file_path), str(dest_path)))
                     logger.info(
                         "Moved: %s -> %s/%s", file_path.name, category, dest_path.name
                     )
@@ -160,6 +156,13 @@ class FileOrganizer:
                 summary.errors += 1
             except OSError as e:
                 logger.error("Error processing %s: %s", file_path.name, e)
+                summary.errors += 1
+
+        if not self.dry_run and completed_moves:
+            try:
+                record_operation(self.target_dir, completed_moves)
+            except (OSError, ValueError) as exc:
+                logger.error("Could not save undo history: %s", exc)
                 summary.errors += 1
 
         return summary

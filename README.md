@@ -14,7 +14,7 @@ A safe, general-purpose local file organizer and file-management CLI that catego
 
 Managing a cluttered `Downloads` or `Documents` folder manually is tedious, but using automated scripts is often dangerous. Most quick-and-dirty file organizers blindly move files, leading to accidental overwrites, silent deletions, or broken symlinks.
 
-`kaif-file-organizer` was built to provide a **production-grade, safety-first** approach to file organization. It guarantees that your files will never be automatically deleted or silently overwritten. It is designed to be a reliable utility for your daily workflow, offering dry-runs, collision detection, and extensive configurability.
+`kaif-file-organizer` was built to provide a **production-grade, safety-first** approach to file organization. It guarantees that your files will never be automatically deleted or silently overwritten. It is designed to be a reliable utility for your daily workflow, offering dry-runs, collision detection, undo support, and extensive configurability.
 
 ## Features
 
@@ -24,6 +24,8 @@ Managing a cluttered `Downloads` or `Documents` folder manually is tedious, but 
 - **Configurable**: Use sensible defaults or provide your own JSON configuration for custom categories.
 - **Recursive Mode**: Explicitly opt-in to process subdirectories.
 - **Hidden/System Files**: Safely ignores hidden files (starting with `.`) and symlinks by default.
+- **Undo**: Records successful moves and can restore the most recent organization operation without overwriting existing files.
+- **Structured Logging**: Operational messages and errors use Python's logging system, with `--verbose` enabling debug output.
 
 ## Prerequisites
 
@@ -73,6 +75,20 @@ Skip confirmation prompts (for automation):
 file-organizer ~/Downloads --yes
 ```
 
+Undo the most recent successful organization:
+
+```bash
+file-organizer ~/Downloads --undo
+```
+
+`--undo` restores recorded moves in reverse order and refuses to overwrite an existing original path. If part of an undo cannot be completed, the failed records remain available for a later retry.
+
+Enable verbose logging:
+
+```bash
+file-organizer ~/Downloads --yes --verbose
+```
+
 ## Configuration
 
 By default, files are organized into standard categories (Documents, Images, Videos, Audio, Archives, Code, etc.).
@@ -100,25 +116,24 @@ File manipulation is potentially destructive, which is why `file-organizer` impl
 - **No silent overwrites**: Filename collisions in the destination are handled gracefully (`file (1).txt`).
 - **No automatic deletion**: The tool will not delete any files or directories.
 - **No hidden/system file moves**: Hidden files and symbolic links are ignored by default.
+- **Undo safety**: Undo never overwrites an existing original path and preserves failed undo records for retry.
 
 ## Development
 
-Clone the repository and install it in development mode:
+Clone the repository and install it in development mode. This project uses `uv` and the committed `uv.lock` for reproducible development environments:
 
 ```bash
 git clone https://github.com/techykaif/file-organizer.git
 cd file-organizer
-python3 -m venv .venv
-source .venv/bin/activate
-pip install -e ".[dev]"
+uv sync --locked --extra dev
 ```
 
 ### Running Tests
 
-Execute the test suite using pytest:
+Execute the full test suite:
 
 ```bash
-pytest tests/
+uv run --locked pytest --cov=file_organizer --cov-fail-under=85 tests/
 ```
 
 ### Running Ruff
@@ -126,7 +141,16 @@ pytest tests/
 Run linting and formatting checks:
 
 ```bash
-ruff check .
+uv run --locked ruff check .
+uv run --locked ruff format --check .
+```
+
+### Running Type Checks
+
+Run the same pinned Pyright version used by CI:
+
+```bash
+uvx --from pyright==1.1.411 pyright
 ```
 
 ### Building the Package
@@ -134,8 +158,7 @@ ruff check .
 Build the source distribution and wheel:
 
 ```bash
-python -m pip install build
-python -m build
+uv build
 ```
 
 ## Project Structure
@@ -146,10 +169,16 @@ src/
     ├── __init__.py      # Package metadata
     ├── cli.py           # CLI entry point and argument parsing
     ├── config.py        # Default categories and configuration loading
-    └── organizer.py     # Core file moving and safety logic
+    ├── logging_config.py # Centralized structured logging configuration
+    ├── organizer.py     # Core file moving and safety logic
+    └── undo.py           # Operation history and safe rollback
+
 tests/
 ├── test_cli.py          # CLI integration tests
-└── test_organizer.py    # Unit tests for core logic
+├── test_cli_undo.py     # Undo CLI integration tests
+├── test_logging_config.py # Logging configuration tests
+├── test_organizer.py    # Unit tests for core logic
+└── test_undo.py         # Undo and recovery tests
 ```
 
 ## Release & Development Workflow
@@ -157,6 +186,9 @@ tests/
 This project uses standard GitHub Actions for CI and CD.
 
 - **Tests**: Automatically run on every push and pull request to `main`.
+- **Type checking**: Pyright runs against the `src/` package in CI.
+- **Reproducibility**: CI installs development dependencies with `uv sync --locked` using the committed `uv.lock`.
+- **Security**: Dependency auditing runs with `pip-audit`, and CodeQL provides separate static security scanning.
 - **Releases**: Managed via GitHub Releases. Publishing a new release triggers the PyPI Trusted Publishing workflow (`release.yml`), which builds and uploads the package to PyPI securely via OIDC.
 
 ## Contributing

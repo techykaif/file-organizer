@@ -7,9 +7,10 @@ from file_organizer import __version__
 from file_organizer.config import load_config
 from file_organizer.logging_config import configure_logging
 from file_organizer.organizer import FileOrganizer
+from file_organizer.undo import undo_last_operation
 
 
-def main():
+def main() -> None:
     parser = argparse.ArgumentParser(
         prog="file-organizer",
         description="A safe, general-purpose local file organizer and file-management CLI.",
@@ -39,6 +40,11 @@ def main():
         help="Enable verbose informational logging.",
     )
     parser.add_argument(
+        "--undo",
+        action="store_true",
+        help="Undo the most recent successful organization operation.",
+    )
+    parser.add_argument(
         "--version", action="version", version=f"%(prog)s {__version__}"
     )
 
@@ -52,6 +58,18 @@ def main():
     if not target_path.is_dir():
         logger.error("Path '%s' is not a directory.", target_path)
         sys.exit(1)
+
+    if args.undo:
+        if any((args.dry_run, args.recursive, args.config, args.yes)):
+            logger.error("--undo cannot be combined with organization options.")
+            sys.exit(2)
+        restored, errors = undo_last_operation(target_path.resolve())
+        logger.info("--- Undo Summary ---")
+        logger.info("Files restored: %d", restored)
+        if errors:
+            logger.error("Errors encountered: %d", errors)
+            sys.exit(1)
+        sys.exit(0)
 
     categories = None
     if args.config:

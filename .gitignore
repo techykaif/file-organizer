@@ -27,6 +27,7 @@ htmlcov/
 
 # Type checking
 .mypy_cache/
+.pyright/
 
 # OS files
 .DS_Store
@@ -40,6 +41,9 @@ Thumbs.db
 .env
 .env.*
 !.env.example
+
+# Organizer runtime state
+.file-organizer-history.json
 
 # Temporary files
 *.tmp
