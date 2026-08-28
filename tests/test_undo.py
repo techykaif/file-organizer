@@ -1,3 +1,5 @@
+import json
+
 import pytest
 
 from file_organizer.undo import (
@@ -79,3 +81,55 @@ def test_undo_rejects_invalid_history(tmp_path):
 
     with pytest.raises(ValueError, match="Invalid organizer history"):
         undo_last_operation(tmp_path)
+
+
+def test_undo_rejects_malformed_history_record(tmp_path):
+    history = tmp_path / HISTORY_FILENAME
+    history.write_text(json.dumps([[{"source": str(tmp_path / "a.txt")}]]))
+
+    with pytest.raises(ValueError, match="Invalid organizer history"):
+        undo_last_operation(tmp_path)
+
+
+def test_undo_rejects_paths_outside_target_directory(tmp_path):
+    outside = tmp_path.parent / "outside.txt"
+    destination = tmp_path / "Documents" / "outside.txt"
+    destination.parent.mkdir()
+    destination.write_text("content")
+    (tmp_path / HISTORY_FILENAME).write_text(
+        json.dumps(
+            [[
+                {
+                    "source": str(outside),
+                    "destination": str(destination),
+                }
+            ]]
+        )
+    )
+
+    restored, errors = undo_last_operation(tmp_path)
+
+    assert (restored, errors) == (0, 1)
+    assert destination.read_text() == "content"
+    assert (tmp_path / HISTORY_FILENAME).exists()
+
+
+def test_history_save_is_recoverable_when_replace_fails(tmp_path, monkeypatch):
+    source = tmp_path / "report.txt"
+    destination = tmp_path / "Documents" / "report.txt"
+    destination.parent.mkdir()
+    destination.write_text("report")
+
+    original_replace = __import__("os").replace
+
+    def fail_once(src, dst):
+        raise OSError("replace failed")
+
+    monkeypatch.setattr("file_organizer.undo.os.replace", fail_once)
+
+    with pytest.raises(OSError, match="replace failed"):
+        record_operation(tmp_path, [MoveRecord(str(source), str(destination))])
+
+    assert not (tmp_path / HISTORY_FILENAME).exists()
+    assert list(tmp_path.glob(".file-organizer-history-*") ) == []
+    monkeypatch.setattr("file_organizer.undo.os.replace", original_replace)
