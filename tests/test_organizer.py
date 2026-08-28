@@ -107,7 +107,7 @@ def test_recursive_dry_run_reports_relative_path(tmp_path, capsys):
     assert summary.moved == 1
     assert (
         "[DRY-RUN] Would move: subfolder/test.txt -> Documents/test.txt"
-        in capsys.readouterr().out
+        in capsys.readouterr().err
     )
 
 
@@ -165,7 +165,7 @@ def test_hash_error_is_non_fatal(tmp_path, monkeypatch, capsys):
     )
 
     assert organizer._calculate_hash(source) is None
-    assert "Could not read" in capsys.readouterr().out
+    assert "Could not read" in capsys.readouterr().err
 
 
 def test_permission_error_during_directory_scan(tmp_path, monkeypatch):

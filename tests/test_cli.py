@@ -60,9 +60,9 @@ def test_cli_dry_run(tmp_path):
     result = run_cli_module(str(tmp_path), "--dry-run")
 
     assert result.returncode == 0
-    assert "--- Dry Run Summary ---" in result.stdout
-    assert "Files found:          1" in result.stdout
-    assert "Files to move:        1" in result.stdout
+    assert "--- Dry Run Summary ---" in result.stderr
+    assert "Files found:          1" in result.stderr
+    assert "Files to move:        1" in result.stderr
     assert (tmp_path / "test.txt").exists()
     assert not (tmp_path / "Documents").exists()
 
@@ -73,8 +73,8 @@ def test_cli_normal_run(tmp_path):
     result = run_cli_module(str(tmp_path), "--yes")
 
     assert result.returncode == 0
-    assert "--- Organization Summary ---" in result.stdout
-    assert "Files moved:          1" in result.stdout
+    assert "--- Organization Summary ---" in result.stderr
+    assert "Files moved:          1" in result.stderr
     assert not (tmp_path / "test.txt").exists()
     assert (tmp_path / "Documents" / "test.txt").exists()
 
@@ -87,8 +87,8 @@ def test_cli_recursive(tmp_path):
     result = run_cli_module(str(tmp_path), "--yes", "--recursive")
 
     assert result.returncode == 0
-    assert "Files found:          1" in result.stdout
-    assert "Files moved:          1" in result.stdout
+    assert "Files found:          1" in result.stderr
+    assert "Files moved:          1" in result.stderr
     assert (tmp_path / "Images" / "test.jpg").exists()
     assert not (sub / "test.jpg").exists()
 
@@ -148,7 +148,7 @@ def test_cli_main_confirmation_declined(monkeypatch, tmp_path, capsys):
         cli.main()
 
     assert exc_info.value.code == 0
-    assert "Operation cancelled." in capsys.readouterr().out
+    assert "Operation cancelled." in capsys.readouterr().err
 
 
 def test_cli_main_confirmation_accepted(monkeypatch, tmp_path):
@@ -225,7 +225,7 @@ def test_cli_main_summary_and_success(monkeypatch, tmp_path, capsys):
     with pytest.raises(SystemExit) as exc_info:
         cli.main()
 
-    output = capsys.readouterr().out
+    output = capsys.readouterr().err
     assert exc_info.value.code == 0
     assert "Files found:          3" in output
     assert "Files moved:          2" in output
@@ -249,7 +249,7 @@ def test_cli_main_dry_run_summary(monkeypatch, tmp_path, capsys):
     with pytest.raises(SystemExit) as exc_info:
         cli.main()
 
-    output = capsys.readouterr().out
+    output = capsys.readouterr().err
     assert exc_info.value.code == 0
     assert "--- Dry Run Summary ---" in output
     assert "Duplicates to skip:   1" in output
@@ -270,7 +270,7 @@ def test_cli_main_reports_errors(monkeypatch, tmp_path, capsys):
     with pytest.raises(SystemExit) as exc_info:
         cli.main()
 
-    output = capsys.readouterr().out
+    output = capsys.readouterr().err
     assert exc_info.value.code == 1
     assert "Errors encountered:   1" in output
 
@@ -289,7 +289,7 @@ def test_cli_main_dry_run_reports_errors(monkeypatch, tmp_path, capsys):
     with pytest.raises(SystemExit) as exc_info:
         cli.main()
 
-    output = capsys.readouterr().out
+    output = capsys.readouterr().err
     assert exc_info.value.code == 1
     assert "Errors encountered:   1" in output
 
