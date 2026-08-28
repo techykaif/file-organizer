@@ -74,7 +74,11 @@ def test_duplicate_file_skipping(tmp_path):
 
     docs_dir = tmp_path / "Documents"
     assert len(list(docs_dir.iterdir())) == 1
-    left_behind = [f for f in tmp_path.iterdir() if f.is_file()]
+    left_behind = [
+        f
+        for f in tmp_path.iterdir()
+        if f.is_file() and f.name != ".file-organizer-history.json"
+    ]
     assert len(left_behind) == 1
 
 
@@ -174,9 +178,6 @@ def test_permission_error_during_directory_scan(tmp_path, monkeypatch):
     def deny(_path):
         raise PermissionError("access denied")
 
-    # Patch the class method rather than the individual PosixPath instance.
-    # Path instances use immutable/slot-based attributes, so assigning
-    # organizer.target_dir.iterdir directly raises AttributeError.
     monkeypatch.setattr(Path, "iterdir", deny)
     summary = organizer.run()
 
