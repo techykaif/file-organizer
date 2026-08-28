@@ -8,6 +8,7 @@ from pathlib import Path
 
 from file_organizer.config import DEFAULT_CATEGORIES, get_category_for_extension
 from file_organizer.logging_config import get_logger
+from file_organizer.transaction import PlannedMove, TransactionError, execute_transaction
 from file_organizer.undo import MoveRecord, record_operation
 
 logger = get_logger()
@@ -75,7 +76,7 @@ class FileOrganizer:
     def run(self) -> OrganizerSummary:
         """Run the file organization. Returns an OrganizerSummary."""
         summary = OrganizerSummary()
-        completed_moves: list[MoveRecord] = []
+        planned_moves: list[PlannedMove] = []
 
         if not self.target_dir.exists():
             logger.error("Target directory '%s' does not exist.", self.target_dir)
@@ -131,6 +132,7 @@ class FileOrganizer:
                 if collision:
                     summary.collisions_handled += 1
 
+                planned_moves.append(PlannedMove(file_path, dest_path))
                 if self.dry_run:
                     display_path = (
                         file_path.relative_to(self.target_dir)
@@ -143,26 +145,35 @@ class FileOrganizer:
                         category,
                         dest_path.name,
                     )
-                else:
-                    dest_dir.mkdir(exist_ok=True, parents=True)
-                    shutil.move(str(file_path), str(dest_path))
-                    completed_moves.append(MoveRecord(str(file_path), str(dest_path)))
-                    logger.info(
-                        "Moved: %s -> %s/%s", file_path.name, category, dest_path.name
-                    )
-                summary.moved += 1
-            except PermissionError:
-                logger.error("Permission denied moving %s", file_path.name)
-                summary.errors += 1
-            except OSError as e:
-                logger.error("Error processing %s: %s", file_path.name, e)
+            except (PermissionError, OSError) as exc:
+                logger.error("Error planning %s: %s", file_path.name, exc)
                 summary.errors += 1
 
-        if not self.dry_run and completed_moves:
-            try:
-                record_operation(self.target_dir, completed_moves)
-            except (OSError, ValueError) as exc:
-                logger.error("Could not save undo history: %s", exc)
-                summary.errors += 1
+        if self.dry_run:
+            summary.moved = len(planned_moves)
+            return summary
+
+        if not planned_moves:
+            return summary
+
+        try:
+            completed_moves = execute_transaction(
+                planned_moves,
+                lambda source, destination: shutil.move(str(source), str(destination)),
+            )
+        except TransactionError as exc:
+            logger.error("Organization transaction failed: %s", exc)
+            summary.errors += 1
+            return summary
+
+        summary.moved = len(completed_moves)
+        try:
+            record_operation(self.target_dir, completed_moves)
+        except (OSError, ValueError) as exc:
+            logger.error("Could not save undo history: %s", exc)
+            summary.errors += 1
+
+        for record in completed_moves:
+            logger.info("Moved: %s -> %s", Path(record.source).name, record.destination)
 
         return summary
