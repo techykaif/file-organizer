@@ -24,7 +24,9 @@ def validate_plan(plan: list[PlannedMove]) -> None:
     if len(destinations) != len(set(destinations)):
         raise TransactionError("Move plan contains duplicate destinations")
     if sources & set(destinations):
-        raise TransactionError("Move plan contains overlapping source and destination paths")
+        raise TransactionError(
+            "Move plan contains overlapping source and destination paths"
+        )
 
 
 def execute_transaction(
