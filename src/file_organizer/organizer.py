@@ -160,10 +160,13 @@ class FileOrganizer:
         if not planned_moves:
             return summary
 
+        def move_file(source: Path, destination: Path) -> None:
+            shutil.move(str(source), str(destination))
+
         try:
             completed_moves = execute_transaction(
                 planned_moves,
-                lambda source, destination: shutil.move(str(source), str(destination)),
+                move_file,
             )
         except TransactionError as exc:
             logger.error("Organization transaction failed: %s", exc)
@@ -178,6 +181,10 @@ class FileOrganizer:
             summary.errors += 1
 
         for record in completed_moves:
-            logger.info("Moved: %s -> %s", Path(record.source).name, record.destination)
+            logger.info(
+                "Moved: %s -> %s",
+                record.source,
+                record.destination,
+            )
 
         return summary
