@@ -67,7 +67,11 @@ def _save_history(target_dir: Path, history: list[list[MoveRecord]]) -> None:
     temp_path: str | None = None
     try:
         with tempfile.NamedTemporaryFile(
-            mode="w", encoding="utf-8", dir=target_dir, prefix=".file-organizer-history-", delete=False
+            mode="w",
+            encoding="utf-8",
+            dir=target_dir,
+            prefix=".file-organizer-history-",
+            delete=False,
         ) as temp_file:
             temp_file.write(payload)
             temp_file.flush()
