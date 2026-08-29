@@ -8,11 +8,12 @@ from file_organizer import cli
 from file_organizer.organizer import OrganizerSummary
 
 
-def run_cli_module(*args):
+def run_cli_module(*args, input_text=None):
     return subprocess.run(
         [sys.executable, "-m", "file_organizer.cli", *args],
         capture_output=True,
         text=True,
+        input=input_text,
         check=False,
     )
 
@@ -40,6 +41,12 @@ def test_cli_version():
 
 
 def test_cli_invalid_path():
+    result = run_cli_module("/path/that/does/not/exist/12345", "--yes")
+    assert result.returncode == 1
+    assert "does not exist" in result.stderr
+
+
+def test_cli_missing_path_exits_nonzero():
     result = run_cli_module("/path/that/does/not/exist/12345", "--yes")
     assert result.returncode == 1
     assert "does not exist" in result.stderr
@@ -138,6 +145,14 @@ def test_cli_confirmation_declined(tmp_path):
     result = run_cli_module(str(tmp_path), "--yes=false")
 
     assert result.returncode != 0
+
+
+def test_cli_prompts_and_cancels_without_yes(tmp_path):
+    result = run_cli_module(str(tmp_path), input_text="n\n")
+
+    assert result.returncode == 0
+    assert "Operation cancelled." in result.stderr
+    assert not (tmp_path / "Documents").exists()
 
 
 def test_cli_main_confirmation_declined(monkeypatch, tmp_path, capsys):
