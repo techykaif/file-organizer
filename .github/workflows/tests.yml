@@ -11,9 +11,10 @@ on:
 
 jobs:
   test:
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os }}
     strategy:
       matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
         python-version: ["3.12", "3.13", "3.14"]
 
     steps:
@@ -55,12 +56,20 @@ jobs:
         uv build
 
     - name: Validate Wheel Installation
+      shell: bash
       run: |
         python -m venv wheel-venv
-        WHEEL_PATH=$(ls dist/*.whl)
-        wheel-venv/bin/pip install "$WHEEL_PATH"
-        wheel-venv/bin/file-organizer --version
-        wheel-venv/bin/file-organizer --help
+        if [[ "${{ runner.os }}" == "Windows" ]]; then
+          WHEEL_PATH=$(ls dist/*.whl)
+          wheel-venv/Scripts/pip install "$WHEEL_PATH"
+          wheel-venv/Scripts/file-organizer --version
+          wheel-venv/Scripts/file-organizer --help
+        else
+          WHEEL_PATH=$(ls dist/*.whl)
+          wheel-venv/bin/pip install "$WHEEL_PATH"
+          wheel-venv/bin/file-organizer --version
+          wheel-venv/bin/file-organizer --help
+        fi
         rm -rf wheel-venv
 
   fresh-clone:
